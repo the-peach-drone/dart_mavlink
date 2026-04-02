@@ -338,7 +338,37 @@ const MavType mavTypeWinch = 42;
 /// MAV_TYPE_GENERIC_MULTIROTOR
 const MavType mavTypeGenericMultirotor = 43;
 
-/// These flags encode the MAV mode.
+/// Illuminator. An illuminator is a light source that is used for lighting up dark areas external to the system: e.g. a torch or searchlight (as opposed to a light source for illuminating the system itself, e.g. an indicator light).
+///
+/// MAV_TYPE_ILLUMINATOR
+const MavType mavTypeIlluminator = 44;
+
+/// Orbiter spacecraft. Includes satellites orbiting terrestrial and extra-terrestrial bodies. Follows NASA Spacecraft Classification.
+///
+/// MAV_TYPE_SPACECRAFT_ORBITER
+const MavType mavTypeSpacecraftOrbiter = 45;
+
+/// A generic four-legged ground vehicle (e.g., a robot dog).
+///
+/// MAV_TYPE_GROUND_QUADRUPED
+const MavType mavTypeGroundQuadruped = 46;
+
+/// VTOL hybrid of helicopter and autogyro. It has a main rotor for lift and separate propellers for forward flight. The rotor must be powered for hover but can autorotate in cruise flight. See: https://en.wikipedia.org/wiki/Gyrodyne
+///
+/// MAV_TYPE_VTOL_GYRODYNE
+const MavType mavTypeVtolGyrodyne = 47;
+
+/// Gripper
+///
+/// MAV_TYPE_GRIPPER
+const MavType mavTypeGripper = 48;
+
+/// Radio
+///
+/// MAV_TYPE_RADIO
+const MavType mavTypeRadio = 49;
+
+/// These flags encode the MAV mode, see MAV_MODE enum for useful combinations.
 ///
 /// MAV_MODE_FLAG
 typedef MavModeFlag = int;
@@ -378,7 +408,7 @@ const MavModeFlag mavModeFlagAutoEnabled = 4;
 /// MAV_MODE_FLAG_TEST_ENABLED
 const MavModeFlag mavModeFlagTestEnabled = 2;
 
-/// 0b00000001 Reserved for future use.
+/// 0b00000001 system-specific custom mode is enabled. When using this flag to enable a custom mode all other flags should be ignored.
 ///
 /// MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
 const MavModeFlag mavModeFlagCustomModeEnabled = 1;
@@ -477,9 +507,18 @@ const MavState mavStatePoweroff = 7;
 /// MAV_STATE_FLIGHT_TERMINATION
 const MavState mavStateFlightTermination = 8;
 
-/// Component ids (values) for the different types and instances of onboard hardware/software that might make up a MAVLink system (autopilot, cameras, servos, GPS systems, avoidance systems etc.).
-/// Components must use the appropriate ID in their source address when sending messages. Components can also use IDs to determine if they are the intended recipient of an incoming message. The MAV_COMP_ID_ALL value is used to indicate messages that must be processed by all components.
-/// When creating new entries, components that can have multiple instances (e.g. cameras, servos etc.) should be allocated sequential values. An appropriate number of values should be left free after these components to allow the number of instances to be expanded.
+/// Legacy component ID values for particular types of hardware/software that might make up a MAVLink system (autopilot, cameras, servos, avoidance systems etc.).
+///
+/// Components are not required or expected to use IDs with names that correspond to their type or function, but may choose to do so.
+/// Using an ID that matches the type may slightly reduce the chances of component id clashes, as, for historical reasons, it is less likely to be used by some other type of component.
+/// System integration will still need to ensure that all components have unique IDs.
+///
+/// Component IDs are used for addressing messages to a particular component within a system.
+/// A component can use any unique ID between 1 and 255 (MAV_COMP_ID_ALL value is the broadcast address, used to send to all components).
+///
+/// Historically component ID were also used for identifying the type of component.
+/// New code must not use component IDs to infer the component type, but instead check the MAV_TYPE in the HEARTBEAT message!
+///
 ///
 /// MAV_COMPONENT
 typedef MavComponent = int;
@@ -899,6 +938,21 @@ const MavComponent mavCompIdCamera5 = 104;
 /// MAV_COMP_ID_CAMERA6
 const MavComponent mavCompIdCamera6 = 105;
 
+/// Radio #1.
+///
+/// MAV_COMP_ID_RADIO
+const MavComponent mavCompIdRadio = 110;
+
+/// Radio #2.
+///
+/// MAV_COMP_ID_RADIO2
+const MavComponent mavCompIdRadio2 = 111;
+
+/// Radio #3.
+///
+/// MAV_COMP_ID_RADIO3
+const MavComponent mavCompIdRadio3 = 112;
+
 /// Servo #1.
 ///
 /// MAV_COMP_ID_SERVO1
@@ -1156,12 +1210,189 @@ const MavComponent mavCompIdUartBridge = 241;
 /// MAV_COMP_ID_TUNNEL_NODE
 const MavComponent mavCompIdTunnelNode = 242;
 
+/// Illuminator
+///
+/// MAV_COMP_ID_ILLUMINATOR
+const MavComponent mavCompIdIlluminator = 243;
+
 /// Deprecated, don't use. Component for handling system messages (e.g. to ARM, takeoff, etc.).
 ///
 /// MAV_COMP_ID_SYSTEM_CONTROL
 @Deprecated(
     "Replaced by [MAV_COMP_ID_ALL] since 2018-11. System control does not require a separate component ID. Instead, system commands should be sent with target_component=MAV_COMP_ID_ALL allowing the target component to use any appropriate component id.")
 const MavComponent mavCompIdSystemControl = 250;
+
+/// Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive).
+///
+/// MAV_BOOL
+typedef MavBool = int;
+
+/// False.
+///
+/// MAV_BOOL_FALSE
+const MavBool mavBoolFalse = 0;
+
+/// True.
+///
+/// MAV_BOOL_TRUE
+const MavBool mavBoolTrue = 1;
+
+/// Bitmask of (optional) autopilot capabilities (64 bit). If a bit is set, the autopilot supports this capability.
+///
+/// MAV_PROTOCOL_CAPABILITY
+typedef MavProtocolCapability = int;
+
+/// Autopilot supports the MISSION_ITEM float message type.
+/// Note that MISSION_ITEM is deprecated, and autopilots should use MISSION_ITEM_INT instead.
+///
+///
+/// MAV_PROTOCOL_CAPABILITY_MISSION_FLOAT
+const MavProtocolCapability mavProtocolCapabilityMissionFloat = 1;
+
+/// Autopilot supports the new param float message type.
+///
+/// MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT
+@Deprecated(
+    "Replaced by [MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_C_CAST] since 2022-03. ")
+const MavProtocolCapability mavProtocolCapabilityParamFloat = 2;
+
+/// Autopilot supports MISSION_ITEM_INT scaled integer message type.
+/// Note that this flag must always be set if missions are supported, because missions must always use MISSION_ITEM_INT (rather than MISSION_ITEM, which is deprecated).
+///
+///
+/// MAV_PROTOCOL_CAPABILITY_MISSION_INT
+const MavProtocolCapability mavProtocolCapabilityMissionInt = 4;
+
+/// Autopilot supports COMMAND_INT scaled integer message type.
+///
+/// MAV_PROTOCOL_CAPABILITY_COMMAND_INT
+const MavProtocolCapability mavProtocolCapabilityCommandInt = 8;
+
+/// Parameter protocol uses byte-wise encoding of parameter values into param_value (float) fields: https://mavlink.io/en/services/parameter.html#parameter-encoding.
+/// Note that either this flag or MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_C_CAST should be set if the parameter protocol is supported.
+///
+///
+/// MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_BYTEWISE
+const MavProtocolCapability mavProtocolCapabilityParamEncodeBytewise = 16;
+
+/// Autopilot supports the File Transfer Protocol v1: https://mavlink.io/en/services/ftp.html.
+///
+/// MAV_PROTOCOL_CAPABILITY_FTP
+const MavProtocolCapability mavProtocolCapabilityFtp = 32;
+
+/// Autopilot supports commanding attitude offboard.
+///
+/// MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET
+const MavProtocolCapability mavProtocolCapabilitySetAttitudeTarget = 64;
+
+/// Autopilot supports commanding position and velocity targets in local NED frame.
+///
+/// MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_LOCAL_NED
+const MavProtocolCapability mavProtocolCapabilitySetPositionTargetLocalNed =
+    128;
+
+/// Autopilot supports commanding position and velocity targets in global scaled integers.
+///
+/// MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_GLOBAL_INT
+const MavProtocolCapability mavProtocolCapabilitySetPositionTargetGlobalInt =
+    256;
+
+/// Autopilot supports terrain protocol / data handling.
+///
+/// MAV_PROTOCOL_CAPABILITY_TERRAIN
+const MavProtocolCapability mavProtocolCapabilityTerrain = 512;
+
+/// Reserved for future use.
+///
+/// MAV_PROTOCOL_CAPABILITY_RESERVED3
+const MavProtocolCapability mavProtocolCapabilityReserved3 = 1024;
+
+/// Autopilot supports the MAV_CMD_DO_FLIGHTTERMINATION command (flight termination).
+///
+/// MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION
+const MavProtocolCapability mavProtocolCapabilityFlightTermination = 2048;
+
+/// Autopilot supports onboard compass calibration.
+///
+/// MAV_PROTOCOL_CAPABILITY_COMPASS_CALIBRATION
+const MavProtocolCapability mavProtocolCapabilityCompassCalibration = 4096;
+
+/// Autopilot supports MAVLink version 2.
+///
+/// MAV_PROTOCOL_CAPABILITY_MAVLINK2
+const MavProtocolCapability mavProtocolCapabilityMavlink2 = 8192;
+
+/// Autopilot supports mission fence protocol.
+///
+/// MAV_PROTOCOL_CAPABILITY_MISSION_FENCE
+const MavProtocolCapability mavProtocolCapabilityMissionFence = 16384;
+
+/// Autopilot supports mission rally point protocol.
+///
+/// MAV_PROTOCOL_CAPABILITY_MISSION_RALLY
+const MavProtocolCapability mavProtocolCapabilityMissionRally = 32768;
+
+/// Reserved for future use.
+///
+/// MAV_PROTOCOL_CAPABILITY_RESERVED2
+const MavProtocolCapability mavProtocolCapabilityReserved2 = 65536;
+
+/// Parameter protocol uses C-cast of parameter values to set the param_value (float) fields: https://mavlink.io/en/services/parameter.html#parameter-encoding.
+/// Note that either this flag or MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_BYTEWISE should be set if the parameter protocol is supported.
+///
+///
+/// MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_C_CAST
+const MavProtocolCapability mavProtocolCapabilityParamEncodeCCast = 131072;
+
+/// This component implements/is a gimbal manager. This means the GIMBAL_MANAGER_INFORMATION, and other messages can be requested.
+///
+///
+/// MAV_PROTOCOL_CAPABILITY_COMPONENT_IMPLEMENTS_GIMBAL_MANAGER
+const MavProtocolCapability
+    mavProtocolCapabilityComponentImplementsGimbalManager = 262144;
+
+/// WIP.
+/// Component supports locking control to a particular GCS independent of its system (via MAV_CMD_REQUEST_OPERATOR_CONTROL).
+///
+/// MAV_PROTOCOL_CAPABILITY_COMPONENT_ACCEPTS_GCS_CONTROL
+const MavProtocolCapability mavProtocolCapabilityComponentAcceptsGcsControl =
+    524288;
+
+/// WIP.
+/// Autopilot has a connected gripper. MAVLink Grippers would set MAV_TYPE_GRIPPER instead.
+///
+/// MAV_PROTOCOL_CAPABILITY_GRIPPER
+const MavProtocolCapability mavProtocolCapabilityGripper = 1048576;
+
+/// These values define the type of firmware release.  These values indicate the first version or release of this type.  For example the first alpha release would be 64, the second would be 65.
+///
+/// FIRMWARE_VERSION_TYPE
+typedef FirmwareVersionType = int;
+
+/// development release
+///
+/// FIRMWARE_VERSION_TYPE_DEV
+const FirmwareVersionType firmwareVersionTypeDev = 0;
+
+/// alpha release
+///
+/// FIRMWARE_VERSION_TYPE_ALPHA
+const FirmwareVersionType firmwareVersionTypeAlpha = 64;
+
+/// beta release
+///
+/// FIRMWARE_VERSION_TYPE_BETA
+const FirmwareVersionType firmwareVersionTypeBeta = 128;
+
+/// release candidate
+///
+/// FIRMWARE_VERSION_TYPE_RC
+const FirmwareVersionType firmwareVersionTypeRc = 192;
+
+/// official stable release
+///
+/// FIRMWARE_VERSION_TYPE_OFFICIAL
+const FirmwareVersionType firmwareVersionTypeOfficial = 255;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
@@ -1303,15 +1534,15 @@ class Heartbeat implements MavlinkMessage {
   }
 }
 
-/// Version and capability of protocol version. This message can be requested with MAV_CMD_REQUEST_MESSAGE and is used as part of the handshaking to establish which MAVLink version should be used on the network. Every node should respond to a request for PROTOCOL_VERSION to enable the handshaking. Library implementers should consider adding this into the default decoding state machine to allow the protocol core to respond directly.
+/// The filtered global position (e.g. fused GPS and accelerometers). The position is in GPS-frame (right-handed, Z-up). It is designed as scaled integer message since the resolution of float is not sufficient.
 ///
-/// PROTOCOL_VERSION
-class ProtocolVersion implements MavlinkMessage {
-  static const int msgId = 300;
+/// GLOBAL_POSITION_INT
+class GlobalPositionInt implements MavlinkMessage {
+  static const int msgId = 33;
 
-  static const int crcExtra = 217;
+  static const int crcExtra = 104;
 
-  static const int mavlinkEncodedLength = 22;
+  static const int mavlinkEncodedLength = 28;
 
   @override
   int get mavlinkMessageId => msgId;
@@ -1319,104 +1550,401 @@ class ProtocolVersion implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => crcExtra;
 
-  /// Currently active MAVLink version number * 100: v1.0 is 100, v2.0 is 200, etc.
+  /// Timestamp (time since system boot).
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// units: ms
+  ///
+  /// time_boot_ms
+  final uint32_t timeBootMs;
+
+  /// Latitude, expressed
+  ///
+  /// MAVLink type: int32_t
+  ///
+  /// units: degE7
+  ///
+  /// lat
+  final int32_t lat;
+
+  /// Longitude, expressed
+  ///
+  /// MAVLink type: int32_t
+  ///
+  /// units: degE7
+  ///
+  /// lon
+  final int32_t lon;
+
+  /// Altitude (MSL). Note that virtually all GPS modules provide both WGS84 and MSL.
+  ///
+  /// MAVLink type: int32_t
+  ///
+  /// units: mm
+  ///
+  /// alt
+  final int32_t alt;
+
+  /// Altitude above home
+  ///
+  /// MAVLink type: int32_t
+  ///
+  /// units: mm
+  ///
+  /// relative_alt
+  final int32_t relativeAlt;
+
+  /// Ground X Speed (Latitude, positive north)
+  ///
+  /// MAVLink type: int16_t
+  ///
+  /// units: cm/s
+  ///
+  /// vx
+  final int16_t vx;
+
+  /// Ground Y Speed (Longitude, positive east)
+  ///
+  /// MAVLink type: int16_t
+  ///
+  /// units: cm/s
+  ///
+  /// vy
+  final int16_t vy;
+
+  /// Ground Z Speed (Altitude, positive down)
+  ///
+  /// MAVLink type: int16_t
+  ///
+  /// units: cm/s
+  ///
+  /// vz
+  final int16_t vz;
+
+  /// Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
   ///
   /// MAVLink type: uint16_t
   ///
-  /// version
-  final uint16_t version;
+  /// units: cdeg
+  ///
+  /// hdg
+  final uint16_t hdg;
 
-  /// Minimum MAVLink version supported
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// min_version
-  final uint16_t minVersion;
-
-  /// Maximum MAVLink version supported (set to the same value as version by default)
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// max_version
-  final uint16_t maxVersion;
-
-  /// The first 8 bytes (not characters printed in hex!) of the git hash.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// spec_version_hash
-  final List<int8_t> specVersionHash;
-
-  /// The first 8 bytes (not characters printed in hex!) of the git hash.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// library_version_hash
-  final List<int8_t> libraryVersionHash;
-
-  ProtocolVersion({
-    required this.version,
-    required this.minVersion,
-    required this.maxVersion,
-    required this.specVersionHash,
-    required this.libraryVersionHash,
+  GlobalPositionInt({
+    required this.timeBootMs,
+    required this.lat,
+    required this.lon,
+    required this.alt,
+    required this.relativeAlt,
+    required this.vx,
+    required this.vy,
+    required this.vz,
+    required this.hdg,
   });
 
-  ProtocolVersion copyWith({
-    uint16_t? version,
-    uint16_t? minVersion,
-    uint16_t? maxVersion,
-    List<int8_t>? specVersionHash,
-    List<int8_t>? libraryVersionHash,
+  GlobalPositionInt copyWith({
+    uint32_t? timeBootMs,
+    int32_t? lat,
+    int32_t? lon,
+    int32_t? alt,
+    int32_t? relativeAlt,
+    int16_t? vx,
+    int16_t? vy,
+    int16_t? vz,
+    uint16_t? hdg,
   }) {
-    return ProtocolVersion(
-      version: version ?? this.version,
-      minVersion: minVersion ?? this.minVersion,
-      maxVersion: maxVersion ?? this.maxVersion,
-      specVersionHash: specVersionHash ?? this.specVersionHash,
-      libraryVersionHash: libraryVersionHash ?? this.libraryVersionHash,
+    return GlobalPositionInt(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      alt: alt ?? this.alt,
+      relativeAlt: relativeAlt ?? this.relativeAlt,
+      vx: vx ?? this.vx,
+      vy: vy ?? this.vy,
+      vz: vz ?? this.vz,
+      hdg: hdg ?? this.hdg,
     );
   }
 
   @override
   Map<String, dynamic> toJson() => {
         'msgId': msgId,
-        'version': version,
-        'minVersion': minVersion,
-        'maxVersion': maxVersion,
-        'specVersionHash': specVersionHash,
-        'libraryVersionHash': libraryVersionHash,
+        'timeBootMs': timeBootMs,
+        'lat': lat,
+        'lon': lon,
+        'alt': alt,
+        'relativeAlt': relativeAlt,
+        'vx': vx,
+        'vy': vy,
+        'vz': vz,
+        'hdg': hdg,
       };
 
-  factory ProtocolVersion.parse(ByteData data_) {
-    if (data_.lengthInBytes < ProtocolVersion.mavlinkEncodedLength) {
-      var len = ProtocolVersion.mavlinkEncodedLength - data_.lengthInBytes;
+  factory GlobalPositionInt.parse(ByteData data_) {
+    if (data_.lengthInBytes < GlobalPositionInt.mavlinkEncodedLength) {
+      var len = GlobalPositionInt.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var version = data_.getUint16(0, Endian.little);
-    var minVersion = data_.getUint16(2, Endian.little);
-    var maxVersion = data_.getUint16(4, Endian.little);
-    var specVersionHash = MavlinkMessage.asUint8List(data_, 6, 8);
-    var libraryVersionHash = MavlinkMessage.asUint8List(data_, 14, 8);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var lat = data_.getInt32(4, Endian.little);
+    var lon = data_.getInt32(8, Endian.little);
+    var alt = data_.getInt32(12, Endian.little);
+    var relativeAlt = data_.getInt32(16, Endian.little);
+    var vx = data_.getInt16(20, Endian.little);
+    var vy = data_.getInt16(22, Endian.little);
+    var vz = data_.getInt16(24, Endian.little);
+    var hdg = data_.getUint16(26, Endian.little);
 
-    return ProtocolVersion(
-        version: version,
-        minVersion: minVersion,
-        maxVersion: maxVersion,
-        specVersionHash: specVersionHash,
-        libraryVersionHash: libraryVersionHash);
+    return GlobalPositionInt(
+        timeBootMs: timeBootMs,
+        lat: lat,
+        lon: lon,
+        alt: alt,
+        relativeAlt: relativeAlt,
+        vx: vx,
+        vy: vy,
+        vz: vz,
+        hdg: hdg);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint16(0, version, Endian.little);
-    data_.setUint16(2, minVersion, Endian.little);
-    data_.setUint16(4, maxVersion, Endian.little);
-    MavlinkMessage.setUint8List(data_, 6, specVersionHash);
-    MavlinkMessage.setUint8List(data_, 14, libraryVersionHash);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setInt32(4, lat, Endian.little);
+    data_.setInt32(8, lon, Endian.little);
+    data_.setInt32(12, alt, Endian.little);
+    data_.setInt32(16, relativeAlt, Endian.little);
+    data_.setInt16(20, vx, Endian.little);
+    data_.setInt16(22, vy, Endian.little);
+    data_.setInt16(24, vz, Endian.little);
+    data_.setUint16(26, hdg, Endian.little);
+    return data_;
+  }
+}
+
+/// Version and capability of autopilot software. This should be emitted in response to a request with MAV_CMD_REQUEST_MESSAGE.
+///
+/// AUTOPILOT_VERSION
+class AutopilotVersion implements MavlinkMessage {
+  static const int msgId = 148;
+
+  static const int crcExtra = 178;
+
+  static const int mavlinkEncodedLength = 78;
+
+  @override
+  int get mavlinkMessageId => msgId;
+
+  @override
+  int get mavlinkCrcExtra => crcExtra;
+
+  /// Bitmap of capabilities
+  ///
+  /// MAVLink type: uint64_t
+  ///
+  /// enum: [MavProtocolCapability]
+  ///
+  /// capabilities
+  final MavProtocolCapability capabilities;
+
+  /// UID if provided by hardware (see uid2)
+  ///
+  /// MAVLink type: uint64_t
+  ///
+  /// uid
+  final uint64_t uid;
+
+  /// Firmware version number.
+  /// The field must be encoded as 4 bytes, where each byte (shown from MSB to LSB) is part of a semantic version: (major) (minor) (patch) (FIRMWARE_VERSION_TYPE).
+  ///
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// flight_sw_version
+  final uint32_t flightSwVersion;
+
+  /// Middleware version number
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// middleware_sw_version
+  final uint32_t middlewareSwVersion;
+
+  /// Operating system version number
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// os_sw_version
+  final uint32_t osSwVersion;
+
+  /// HW / board version (last 8 bits should be silicon ID, if any). The first 16 bits of this field specify a board type from an enumeration stored at https://github.com/PX4/PX4-Bootloader/blob/master/board_types.txt and with extensive additions at https://github.com/ArduPilot/ardupilot/blob/master/Tools/AP_Bootloader/board_types.txt
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// board_version
+  final uint32_t boardVersion;
+
+  /// ID of the board vendor
+  ///
+  /// MAVLink type: uint16_t
+  ///
+  /// vendor_id
+  final uint16_t vendorId;
+
+  /// ID of the product
+  ///
+  /// MAVLink type: uint16_t
+  ///
+  /// product_id
+  final uint16_t productId;
+
+  /// Custom version field, commonly the first 8 bytes of the git hash. This is not an unique identifier, but should allow to identify the commit using the main version number even for very large code bases.
+  ///
+  /// MAVLink type: uint8_t[8]
+  ///
+  /// flight_custom_version
+  final List<int8_t> flightCustomVersion;
+
+  /// Custom version field, commonly the first 8 bytes of the git hash. This is not an unique identifier, but should allow to identify the commit using the main version number even for very large code bases.
+  ///
+  /// MAVLink type: uint8_t[8]
+  ///
+  /// middleware_custom_version
+  final List<int8_t> middlewareCustomVersion;
+
+  /// Custom version field, commonly the first 8 bytes of the git hash. This is not an unique identifier, but should allow to identify the commit using the main version number even for very large code bases.
+  ///
+  /// MAVLink type: uint8_t[8]
+  ///
+  /// os_custom_version
+  final List<int8_t> osCustomVersion;
+
+  /// UID if provided by hardware (supersedes the uid field. If this is non-zero, use this field, otherwise use uid)
+  ///
+  /// MAVLink type: uint8_t[18]
+  ///
+  /// Extensions field for MAVLink 2.
+  ///
+  /// uid2
+  final List<int8_t> uid2;
+
+  AutopilotVersion({
+    required this.capabilities,
+    required this.uid,
+    required this.flightSwVersion,
+    required this.middlewareSwVersion,
+    required this.osSwVersion,
+    required this.boardVersion,
+    required this.vendorId,
+    required this.productId,
+    required this.flightCustomVersion,
+    required this.middlewareCustomVersion,
+    required this.osCustomVersion,
+    required this.uid2,
+  });
+
+  AutopilotVersion copyWith({
+    MavProtocolCapability? capabilities,
+    uint64_t? uid,
+    uint32_t? flightSwVersion,
+    uint32_t? middlewareSwVersion,
+    uint32_t? osSwVersion,
+    uint32_t? boardVersion,
+    uint16_t? vendorId,
+    uint16_t? productId,
+    List<int8_t>? flightCustomVersion,
+    List<int8_t>? middlewareCustomVersion,
+    List<int8_t>? osCustomVersion,
+    List<int8_t>? uid2,
+  }) {
+    return AutopilotVersion(
+      capabilities: capabilities ?? this.capabilities,
+      uid: uid ?? this.uid,
+      flightSwVersion: flightSwVersion ?? this.flightSwVersion,
+      middlewareSwVersion: middlewareSwVersion ?? this.middlewareSwVersion,
+      osSwVersion: osSwVersion ?? this.osSwVersion,
+      boardVersion: boardVersion ?? this.boardVersion,
+      vendorId: vendorId ?? this.vendorId,
+      productId: productId ?? this.productId,
+      flightCustomVersion: flightCustomVersion ?? this.flightCustomVersion,
+      middlewareCustomVersion:
+          middlewareCustomVersion ?? this.middlewareCustomVersion,
+      osCustomVersion: osCustomVersion ?? this.osCustomVersion,
+      uid2: uid2 ?? this.uid2,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'msgId': msgId,
+        'capabilities': capabilities,
+        'uid': uid,
+        'flightSwVersion': flightSwVersion,
+        'middlewareSwVersion': middlewareSwVersion,
+        'osSwVersion': osSwVersion,
+        'boardVersion': boardVersion,
+        'vendorId': vendorId,
+        'productId': productId,
+        'flightCustomVersion': flightCustomVersion,
+        'middlewareCustomVersion': middlewareCustomVersion,
+        'osCustomVersion': osCustomVersion,
+        'uid2': uid2,
+      };
+
+  factory AutopilotVersion.parse(ByteData data_) {
+    if (data_.lengthInBytes < AutopilotVersion.mavlinkEncodedLength) {
+      var len = AutopilotVersion.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var capabilities = data_.getUint64(0, Endian.little);
+    var uid = data_.getUint64(8, Endian.little);
+    var flightSwVersion = data_.getUint32(16, Endian.little);
+    var middlewareSwVersion = data_.getUint32(20, Endian.little);
+    var osSwVersion = data_.getUint32(24, Endian.little);
+    var boardVersion = data_.getUint32(28, Endian.little);
+    var vendorId = data_.getUint16(32, Endian.little);
+    var productId = data_.getUint16(34, Endian.little);
+    var flightCustomVersion = MavlinkMessage.asUint8List(data_, 36, 8);
+    var middlewareCustomVersion = MavlinkMessage.asUint8List(data_, 44, 8);
+    var osCustomVersion = MavlinkMessage.asUint8List(data_, 52, 8);
+    var uid2 = MavlinkMessage.asUint8List(data_, 60, 18);
+
+    return AutopilotVersion(
+        capabilities: capabilities,
+        uid: uid,
+        flightSwVersion: flightSwVersion,
+        middlewareSwVersion: middlewareSwVersion,
+        osSwVersion: osSwVersion,
+        boardVersion: boardVersion,
+        vendorId: vendorId,
+        productId: productId,
+        flightCustomVersion: flightCustomVersion,
+        middlewareCustomVersion: middlewareCustomVersion,
+        osCustomVersion: osCustomVersion,
+        uid2: uid2);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint64(0, capabilities, Endian.little);
+    data_.setUint64(8, uid, Endian.little);
+    data_.setUint32(16, flightSwVersion, Endian.little);
+    data_.setUint32(20, middlewareSwVersion, Endian.little);
+    data_.setUint32(24, osSwVersion, Endian.little);
+    data_.setUint32(28, boardVersion, Endian.little);
+    data_.setUint16(32, vendorId, Endian.little);
+    data_.setUint16(34, productId, Endian.little);
+    MavlinkMessage.setUint8List(data_, 36, flightCustomVersion);
+    MavlinkMessage.setUint8List(data_, 44, middlewareCustomVersion);
+    MavlinkMessage.setUint8List(data_, 52, osCustomVersion);
+    MavlinkMessage.setUint8List(data_, 60, uid2);
     return data_;
   }
 }
@@ -1432,8 +1960,10 @@ class MavlinkDialectStandard implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.parse(data);
-      case 300:
-        return ProtocolVersion.parse(data);
+      case 33:
+        return GlobalPositionInt.parse(data);
+      case 148:
+        return AutopilotVersion.parse(data);
       default:
         return null;
     }
@@ -1444,8 +1974,10 @@ class MavlinkDialectStandard implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.crcExtra;
-      case 300:
-        return ProtocolVersion.crcExtra;
+      case 33:
+        return GlobalPositionInt.crcExtra;
+      case 148:
+        return AutopilotVersion.crcExtra;
       default:
         return -1;
     }

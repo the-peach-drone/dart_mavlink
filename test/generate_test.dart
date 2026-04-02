@@ -76,10 +76,9 @@ void main() {
 
   test('Parse t04, name of enums is empty', () async {
     await generate.DialectDocument.parse('test/mavlink_dialect/t04.xml');
-
   });
 
-  group('parsedMavlinkType', (){
+  group('parsedMavlinkType', () {
     test('test types', () {
       var t = generate.ParsedMavlinkType.parse('uint8_t');
       expect(t.type, generate.BasicType.uint);
@@ -113,19 +112,16 @@ void main() {
 
   group('DialectMessage', () {
     test('Check calculating methods', () async {
-      var dlctDoc = await generate.DialectDocument.parse('mavlink/message_definitions/v1.0/minimal.xml');
-      var msgs = dlctDoc.messages.toList();
-
-      var dlctMessage = msgs[0];
-      expect(dlctMessage.name, "HEARTBEAT");
-      expect(dlctMessage.calculateCrcExtra(), 50);
-      expect(dlctMessage.calculateEncodedLength(), 9);
+      var dlctDoc = await generate.DialectDocument.parse('mavlink/message_definitions/v1.0/common.xml');
+      
+      var heartbeat = dlctDoc.messages.firstWhere((m) => m.name == 'HEARTBEAT');
+      expect(heartbeat.calculateCrcExtra(), 50);
+      expect(heartbeat.calculateEncodedLength(), 9);
 
       // Test a message that contains array fields.
-      dlctMessage = msgs[1];
-      expect(dlctMessage.name, "PROTOCOL_VERSION");
-      expect(dlctMessage.calculateCrcExtra(), 217);
-      expect(dlctMessage.calculateEncodedLength(), 22);
+      var protocolVersion = dlctDoc.messages.firstWhere((m) => m.name == 'PROTOCOL_VERSION');
+      expect(protocolVersion.calculateCrcExtra(), 217);
+      expect(protocolVersion.calculateEncodedLength(), 22);
     });
   });
 }

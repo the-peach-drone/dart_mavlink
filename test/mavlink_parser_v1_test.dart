@@ -14,7 +14,7 @@ void main() {
     0x01, // System ID
     0x01, // Component ID
     0x00, // Message ID (HEARTBEAT)
-      // Begin of payload
+    // Begin of payload
     0x00, 0x00, 0x04, 0x03, // Custom Mode
     0x02, // Type
     0x0C, // autopilot
@@ -96,8 +96,8 @@ void main() {
       0x00, 0x00, 0x00, 0x00, // controls[6]
       0x00, 0x00, 0x80, 0xbf, // controls[7]
       0x00, // group_mlx
-    // End of payload
-      0x31, 0x14  // Checksum (Low byte, High byte)
+      // End of payload
+      0x31, 0x14 // Checksum (Low byte, High byte)
     ]);
     parser!.parse(d);
 

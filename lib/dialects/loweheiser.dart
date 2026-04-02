@@ -1222,6 +1222,15 @@ const MavComponent mavCompIdIlluminator = 243;
     "Replaced by [MAV_COMP_ID_ALL] since 2018-11. System control does not require a separate component ID. Instead, system commands should be sent with target_component=MAV_COMP_ID_ALL allowing the target component to use any appropriate component id.")
 const MavComponent mavCompIdSystemControl = 250;
 
+///
+/// MAV_CMD
+typedef MavCmd = int;
+
+/// Set Loweheiser desired states
+///
+/// MAV_CMD_LOWEHEISER_SET_STATE
+const MavCmd mavCmdLoweheiserSetState = 10151;
+
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
 /// HEARTBEAT
@@ -1362,7 +1371,416 @@ class Heartbeat implements MavlinkMessage {
   }
 }
 
-class MavlinkDialectMinimal implements MavlinkDialect {
+/// Composite EFI and Governor data from Loweheiser equipment.  This message is created by the EFI unit based on its own data and data received from a governor attached to that EFI unit.
+///
+/// LOWEHEISER_GOV_EFI
+class LoweheiserGovEfi implements MavlinkMessage {
+  static const int msgId = 10151;
+
+  static const int crcExtra = 195;
+
+  static const int mavlinkEncodedLength = 85;
+
+  @override
+  int get mavlinkMessageId => msgId;
+
+  @override
+  int get mavlinkCrcExtra => crcExtra;
+
+  /// Generator Battery voltage.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: V
+  ///
+  /// volt_batt
+  final float voltBatt;
+
+  /// Generator Battery current.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: A
+  ///
+  /// curr_batt
+  final float currBatt;
+
+  /// Current being produced by generator.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: A
+  ///
+  /// curr_gen
+  final float currGen;
+
+  /// Load current being consumed by the UAV (sum of curr_gen and curr_batt)
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: A
+  ///
+  /// curr_rot
+  final float currRot;
+
+  /// Generator fuel remaining in litres.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: l
+  ///
+  /// fuel_level
+  final float fuelLevel;
+
+  /// Throttle Output.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: %
+  ///
+  /// throttle
+  final float throttle;
+
+  /// Seconds this generator has run since it was rebooted.
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// units: s
+  ///
+  /// runtime
+  final uint32_t runtime;
+
+  /// Seconds until this generator requires maintenance.  A negative value indicates maintenance is past due.
+  ///
+  /// MAVLink type: int32_t
+  ///
+  /// units: s
+  ///
+  /// until_maintenance
+  final int32_t untilMaintenance;
+
+  /// The Temperature of the rectifier.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// rectifier_temp
+  final float rectifierTemp;
+
+  /// The temperature of the mechanical motor, fuel cell core or generator.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// generator_temp
+  final float generatorTemp;
+
+  /// EFI Supply Voltage.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: V
+  ///
+  /// efi_batt
+  final float efiBatt;
+
+  /// Motor RPM.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rpm
+  ///
+  /// efi_rpm
+  final float efiRpm;
+
+  /// Injector pulse-width in milliseconds.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: ms
+  ///
+  /// efi_pw
+  final float efiPw;
+
+  /// Fuel flow rate in litres/hour.
+  ///
+  /// MAVLink type: float
+  ///
+  /// efi_fuel_flow
+  final float efiFuelFlow;
+
+  /// Fuel consumed.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: l
+  ///
+  /// efi_fuel_consumed
+  final float efiFuelConsumed;
+
+  /// Atmospheric pressure.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: kPa
+  ///
+  /// efi_baro
+  final float efiBaro;
+
+  /// Manifold Air Temperature.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// efi_mat
+  final float efiMat;
+
+  /// Cylinder Head Temperature.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// efi_clt
+  final float efiClt;
+
+  /// Throttle Position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: %
+  ///
+  /// efi_tps
+  final float efiTps;
+
+  /// Exhaust gas temperature.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// efi_exhaust_gas_temperature
+  final float efiExhaustGasTemperature;
+
+  /// Generator status.
+  ///
+  /// MAVLink type: uint16_t
+  ///
+  /// generator_status
+  final uint16_t generatorStatus;
+
+  /// EFI status.
+  ///
+  /// MAVLink type: uint16_t
+  ///
+  /// efi_status
+  final uint16_t efiStatus;
+
+  /// EFI index.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// efi_index
+  final uint8_t efiIndex;
+
+  LoweheiserGovEfi({
+    required this.voltBatt,
+    required this.currBatt,
+    required this.currGen,
+    required this.currRot,
+    required this.fuelLevel,
+    required this.throttle,
+    required this.runtime,
+    required this.untilMaintenance,
+    required this.rectifierTemp,
+    required this.generatorTemp,
+    required this.efiBatt,
+    required this.efiRpm,
+    required this.efiPw,
+    required this.efiFuelFlow,
+    required this.efiFuelConsumed,
+    required this.efiBaro,
+    required this.efiMat,
+    required this.efiClt,
+    required this.efiTps,
+    required this.efiExhaustGasTemperature,
+    required this.generatorStatus,
+    required this.efiStatus,
+    required this.efiIndex,
+  });
+
+  LoweheiserGovEfi copyWith({
+    float? voltBatt,
+    float? currBatt,
+    float? currGen,
+    float? currRot,
+    float? fuelLevel,
+    float? throttle,
+    uint32_t? runtime,
+    int32_t? untilMaintenance,
+    float? rectifierTemp,
+    float? generatorTemp,
+    float? efiBatt,
+    float? efiRpm,
+    float? efiPw,
+    float? efiFuelFlow,
+    float? efiFuelConsumed,
+    float? efiBaro,
+    float? efiMat,
+    float? efiClt,
+    float? efiTps,
+    float? efiExhaustGasTemperature,
+    uint16_t? generatorStatus,
+    uint16_t? efiStatus,
+    uint8_t? efiIndex,
+  }) {
+    return LoweheiserGovEfi(
+      voltBatt: voltBatt ?? this.voltBatt,
+      currBatt: currBatt ?? this.currBatt,
+      currGen: currGen ?? this.currGen,
+      currRot: currRot ?? this.currRot,
+      fuelLevel: fuelLevel ?? this.fuelLevel,
+      throttle: throttle ?? this.throttle,
+      runtime: runtime ?? this.runtime,
+      untilMaintenance: untilMaintenance ?? this.untilMaintenance,
+      rectifierTemp: rectifierTemp ?? this.rectifierTemp,
+      generatorTemp: generatorTemp ?? this.generatorTemp,
+      efiBatt: efiBatt ?? this.efiBatt,
+      efiRpm: efiRpm ?? this.efiRpm,
+      efiPw: efiPw ?? this.efiPw,
+      efiFuelFlow: efiFuelFlow ?? this.efiFuelFlow,
+      efiFuelConsumed: efiFuelConsumed ?? this.efiFuelConsumed,
+      efiBaro: efiBaro ?? this.efiBaro,
+      efiMat: efiMat ?? this.efiMat,
+      efiClt: efiClt ?? this.efiClt,
+      efiTps: efiTps ?? this.efiTps,
+      efiExhaustGasTemperature:
+          efiExhaustGasTemperature ?? this.efiExhaustGasTemperature,
+      generatorStatus: generatorStatus ?? this.generatorStatus,
+      efiStatus: efiStatus ?? this.efiStatus,
+      efiIndex: efiIndex ?? this.efiIndex,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'msgId': msgId,
+        'voltBatt': voltBatt,
+        'currBatt': currBatt,
+        'currGen': currGen,
+        'currRot': currRot,
+        'fuelLevel': fuelLevel,
+        'throttle': throttle,
+        'runtime': runtime,
+        'untilMaintenance': untilMaintenance,
+        'rectifierTemp': rectifierTemp,
+        'generatorTemp': generatorTemp,
+        'efiBatt': efiBatt,
+        'efiRpm': efiRpm,
+        'efiPw': efiPw,
+        'efiFuelFlow': efiFuelFlow,
+        'efiFuelConsumed': efiFuelConsumed,
+        'efiBaro': efiBaro,
+        'efiMat': efiMat,
+        'efiClt': efiClt,
+        'efiTps': efiTps,
+        'efiExhaustGasTemperature': efiExhaustGasTemperature,
+        'generatorStatus': generatorStatus,
+        'efiStatus': efiStatus,
+        'efiIndex': efiIndex,
+      };
+
+  factory LoweheiserGovEfi.parse(ByteData data_) {
+    if (data_.lengthInBytes < LoweheiserGovEfi.mavlinkEncodedLength) {
+      var len = LoweheiserGovEfi.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var voltBatt = data_.getFloat32(0, Endian.little);
+    var currBatt = data_.getFloat32(4, Endian.little);
+    var currGen = data_.getFloat32(8, Endian.little);
+    var currRot = data_.getFloat32(12, Endian.little);
+    var fuelLevel = data_.getFloat32(16, Endian.little);
+    var throttle = data_.getFloat32(20, Endian.little);
+    var runtime = data_.getUint32(24, Endian.little);
+    var untilMaintenance = data_.getInt32(28, Endian.little);
+    var rectifierTemp = data_.getFloat32(32, Endian.little);
+    var generatorTemp = data_.getFloat32(36, Endian.little);
+    var efiBatt = data_.getFloat32(40, Endian.little);
+    var efiRpm = data_.getFloat32(44, Endian.little);
+    var efiPw = data_.getFloat32(48, Endian.little);
+    var efiFuelFlow = data_.getFloat32(52, Endian.little);
+    var efiFuelConsumed = data_.getFloat32(56, Endian.little);
+    var efiBaro = data_.getFloat32(60, Endian.little);
+    var efiMat = data_.getFloat32(64, Endian.little);
+    var efiClt = data_.getFloat32(68, Endian.little);
+    var efiTps = data_.getFloat32(72, Endian.little);
+    var efiExhaustGasTemperature = data_.getFloat32(76, Endian.little);
+    var generatorStatus = data_.getUint16(80, Endian.little);
+    var efiStatus = data_.getUint16(82, Endian.little);
+    var efiIndex = data_.getUint8(84);
+
+    return LoweheiserGovEfi(
+        voltBatt: voltBatt,
+        currBatt: currBatt,
+        currGen: currGen,
+        currRot: currRot,
+        fuelLevel: fuelLevel,
+        throttle: throttle,
+        runtime: runtime,
+        untilMaintenance: untilMaintenance,
+        rectifierTemp: rectifierTemp,
+        generatorTemp: generatorTemp,
+        efiBatt: efiBatt,
+        efiRpm: efiRpm,
+        efiPw: efiPw,
+        efiFuelFlow: efiFuelFlow,
+        efiFuelConsumed: efiFuelConsumed,
+        efiBaro: efiBaro,
+        efiMat: efiMat,
+        efiClt: efiClt,
+        efiTps: efiTps,
+        efiExhaustGasTemperature: efiExhaustGasTemperature,
+        generatorStatus: generatorStatus,
+        efiStatus: efiStatus,
+        efiIndex: efiIndex);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setFloat32(0, voltBatt, Endian.little);
+    data_.setFloat32(4, currBatt, Endian.little);
+    data_.setFloat32(8, currGen, Endian.little);
+    data_.setFloat32(12, currRot, Endian.little);
+    data_.setFloat32(16, fuelLevel, Endian.little);
+    data_.setFloat32(20, throttle, Endian.little);
+    data_.setUint32(24, runtime, Endian.little);
+    data_.setInt32(28, untilMaintenance, Endian.little);
+    data_.setFloat32(32, rectifierTemp, Endian.little);
+    data_.setFloat32(36, generatorTemp, Endian.little);
+    data_.setFloat32(40, efiBatt, Endian.little);
+    data_.setFloat32(44, efiRpm, Endian.little);
+    data_.setFloat32(48, efiPw, Endian.little);
+    data_.setFloat32(52, efiFuelFlow, Endian.little);
+    data_.setFloat32(56, efiFuelConsumed, Endian.little);
+    data_.setFloat32(60, efiBaro, Endian.little);
+    data_.setFloat32(64, efiMat, Endian.little);
+    data_.setFloat32(68, efiClt, Endian.little);
+    data_.setFloat32(72, efiTps, Endian.little);
+    data_.setFloat32(76, efiExhaustGasTemperature, Endian.little);
+    data_.setUint16(80, generatorStatus, Endian.little);
+    data_.setUint16(82, efiStatus, Endian.little);
+    data_.setUint8(84, efiIndex);
+    return data_;
+  }
+}
+
+class MavlinkDialectLoweheiser implements MavlinkDialect {
   static const int mavlinkVersion = 3;
 
   @override
@@ -1373,6 +1791,8 @@ class MavlinkDialectMinimal implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.parse(data);
+      case 10151:
+        return LoweheiserGovEfi.parse(data);
       default:
         return null;
     }
@@ -1383,6 +1803,8 @@ class MavlinkDialectMinimal implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.crcExtra;
+      case 10151:
+        return LoweheiserGovEfi.crcExtra;
       default:
         return -1;
     }

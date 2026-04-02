@@ -8712,498 +8712,192 @@ const AirspeedSensorFlags airspeedSensorUnhealthy = 1;
 /// AIRSPEED_SENSOR_USING
 const AirspeedSensorFlags airspeedSensorUsing = 2;
 
-/// Battery status flags for fault, health and state indication.
+/// Component types for different nodes of the simulator network (flight model, controls, visualisation etc.). Components will always receive messages from the Manager relevant for their type. Only the first component in a network with a given system ID and type will have its messages forwarded by the Manager, all other ones will only be treated as output (will be shadowed). This enum is an extension of MAV_TYPE documented at https://mavlink.io/en/messages/minimal.html#MAV_TYPE
 ///
-/// MAV_BATTERY_STATUS_FLAGS
-typedef MavBatteryStatusFlags = int;
+/// MARSH_TYPE
+typedef MarshType = int;
 
+/// The simulation manager responsible for routing packets between different nodes. Typically MARSH Manager, see https://marsh-sim.github.io/manager.html
 ///
-/// The battery is not ready to use (fly).
-/// Set if the battery has faults or other conditions that make it unsafe to fly with.
-/// Note: It will be the logical OR of other status bits (chosen by the manufacturer/integrator).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE
-const MavBatteryStatusFlags mavBatteryStatusFlagsNotReadyToUse = 1;
-
-///
-/// Battery is charging.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_CHARGING
-const MavBatteryStatusFlags mavBatteryStatusFlagsCharging = 2;
-
-///
-/// Battery is cell balancing (during charging).
-/// Not ready to use (MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE may be set).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_CELL_BALANCING
-const MavBatteryStatusFlags mavBatteryStatusFlagsCellBalancing = 4;
-
-///
-/// Battery cells are not balanced.
-/// Not ready to use.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_CELL_IMBALANCE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultCellImbalance = 8;
-
-///
-/// Battery is auto discharging (towards storage level).
-/// Not ready to use (MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE would be set).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_AUTO_DISCHARGING
-const MavBatteryStatusFlags mavBatteryStatusFlagsAutoDischarging = 16;
-
-///
-/// Battery requires service (not safe to fly).
-/// This is set at vendor discretion.
-/// It is likely to be set for most faults, and may also be set according to a maintenance schedule (such as age, or number of recharge cycles, etc.).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_REQUIRES_SERVICE
-const MavBatteryStatusFlags mavBatteryStatusFlagsRequiresService = 32;
-
-///
-/// Battery is faulty and cannot be repaired (not safe to fly).
-/// This is set at vendor discretion.
-/// The battery should be disposed of safely.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_BAD_BATTERY
-const MavBatteryStatusFlags mavBatteryStatusFlagsBadBattery = 64;
-
-///
-/// Automatic battery protection monitoring is enabled.
-/// When enabled, the system will monitor for certain kinds of faults, such as cells being over-voltage.
-/// If a fault is triggered then and protections are enabled then a safety fault (MAV_BATTERY_STATUS_FLAGS_FAULT_PROTECTION_SYSTEM) will be set and power from the battery will be stopped.
-/// Note that battery protection monitoring should only be enabled when the vehicle is landed. Once the vehicle is armed, or starts moving, the protections should be disabled to prevent false positives from disabling the output.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_PROTECTIONS_ENABLED
-const MavBatteryStatusFlags mavBatteryStatusFlagsProtectionsEnabled = 128;
-
-///
-/// The battery fault protection system had detected a fault and cut all power from the battery.
-/// This will only trigger if MAV_BATTERY_STATUS_FLAGS_PROTECTIONS_ENABLED is set.
-/// Other faults like MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_VOLT may also be set, indicating the cause of the protection fault.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_PROTECTION_SYSTEM
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultProtectionSystem = 256;
-
-/// One or more cells are above their maximum voltage rating.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_VOLT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultOverVolt = 512;
-
-///
-/// One or more cells are below their minimum voltage rating.
-/// A battery that had deep-discharged might be irrepairably damaged, and set both MAV_BATTERY_STATUS_FLAGS_FAULT_UNDER_VOLT and MAV_BATTERY_STATUS_FLAGS_BAD_BATTERY.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_UNDER_VOLT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultUnderVolt = 1024;
-
-/// Over-temperature fault.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_TEMPERATURE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultOverTemperature = 2048;
-
-/// Under-temperature fault.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_UNDER_TEMPERATURE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultUnderTemperature = 4096;
-
-/// WIP.
-/// Circular fence area centered on home. The vehicle must stay inside this area. If home is moved, the fence moves.
-///
-/// MAV_CMD_NAV_FENCE_HOME_CIRCLE_INCLUSION
-const MavBatteryStatusFlags mavCmdNavFenceHomeCircleInclusion = 5005;
-
-/// Over-current fault.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_CURRENT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultOverCurrent = 8192;
-
-///
-/// Short circuit event detected.
-/// The battery may or may not be safe to use (check other flags).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_SHORT_CIRCUIT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultShortCircuit = 16384;
-
-/// Voltage not compatible with power rail voltage (batteries on same power rail should have similar voltage).
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_INCOMPATIBLE_VOLTAGE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultIncompatibleVoltage =
-    32768;
-
-/// Battery firmware is not compatible with current autopilot firmware.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_INCOMPATIBLE_FIRMWARE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultIncompatibleFirmware =
-    65536;
-
-/// Battery is not compatible due to cell configuration (e.g. 5s1p when vehicle requires 6s).
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_INCOMPATIBLE_CELLS_CONFIGURATION
-const MavBatteryStatusFlags
-    mavBatteryStatusFlagsFaultIncompatibleCellsConfiguration = 131072;
-
-///
-/// Battery capacity_consumed and capacity_remaining values are relative to a full battery (they sum to the total capacity of the battery).
-/// This flag would be set for a smart battery that can accurately determine its remaining charge across vehicle reboots and discharge/recharge cycles.
-/// If unset the capacity_consumed indicates the consumption since vehicle power-on, as measured using a power monitor. The capacity_remaining, if provided, indicates the estimated remaining capacity on the assumption that the battery was full on vehicle boot.
-/// If unset a GCS is recommended to advise that users fully charge the battery on power on.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL
-const MavBatteryStatusFlags mavBatteryStatusFlagsCapacityRelativeToFull =
-    262144;
-
-/// Reserved (not used). If set, this will indicate that an additional status field exists for higher status values.
-///
-/// MAV_BATTERY_STATUS_FLAGS_EXTENDED
-const MavBatteryStatusFlags mavBatteryStatusFlagsExtended = 2147483648;
-
-/// CONTROL_STATUS flags.
-///
-/// GCS_CONTROL_STATUS_FLAGS
-typedef GcsControlStatusFlags = int;
-
-/// If set, this CONTROL_STATUS publishes the controlling GCS for the whole system. If unset, the CONTROL_STATUS indicates the controlling GCS for just the component emitting the message. Note that to request control of the system a GCS should send MAV_CMD_REQUEST_OPERATOR_CONTROL to the component emitting CONTROL_STATUS with this flag set.
-///
-/// GCS_CONTROL_STATUS_FLAGS_SYSTEM_MANAGER
-const GcsControlStatusFlags gcsControlStatusFlagsSystemManager = 1;
-
-/// Takeover allowed (requests for control will be granted). If not set requests for control will be rejected, but the controlling GCS will be notified (and may release control or allow takeover).
-///
-/// GCS_CONTROL_STATUS_FLAGS_TAKEOVER_ALLOWED
-const GcsControlStatusFlags gcsControlStatusFlagsTakeoverAllowed = 2;
-
-/// These flags indicate the sensor reporting capabilities for TARGET_ABSOLUTE.
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_FLAGS
-typedef TargetAbsoluteSensorCapabilityFlags = int;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_POSITION
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityPosition = 1;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_VELOCITY
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityVelocity = 2;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_ACCELERATION
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityAcceleration = 4;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_ATTITUDE
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityAttitude = 8;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_RATES
-const TargetAbsoluteSensorCapabilityFlags targetAbsoluteSensorCapabilityRates =
-    16;
-
-/// The frame of a target observation from an onboard sensor.
-///
-/// TARGET_OBS_FRAME
-typedef TargetObsFrame = int;
-
-/// NED local tangent frame (x: North, y: East, z: Down) with origin fixed relative to earth.
-///
-/// TARGET_OBS_FRAME_LOCAL_NED
-const TargetObsFrame targetObsFrameLocalNed = 0;
-
-/// FRD local frame aligned to the vehicle's attitude (x: Forward, y: Right, z: Down) with an origin that travels with vehicle.
-///
-/// TARGET_OBS_FRAME_BODY_FRD
-const TargetObsFrame targetObsFrameBodyFrd = 1;
-
-/// NED local tangent frame (x: North, y: East, z: Down) with an origin that travels with vehicle.
-///
-/// TARGET_OBS_FRAME_LOCAL_OFFSET_NED
-const TargetObsFrame targetObsFrameLocalOffsetNed = 2;
-
-/// Other sensor frame for target observations neither in local NED nor in body FRD.
-///
-/// TARGET_OBS_FRAME_OTHER
-const TargetObsFrame targetObsFrameOther = 3;
-
-/// RADIO_RC_CHANNELS flags (bitmask).
-///
-/// RADIO_RC_CHANNELS_FLAGS
-typedef RadioRcChannelsFlags = int;
-
-/// Failsafe is active. The content of the RC channels data in the RADIO_RC_CHANNELS message is implementation dependent.
-///
-/// RADIO_RC_CHANNELS_FLAGS_FAILSAFE
-const RadioRcChannelsFlags radioRcChannelsFlagsFailsafe = 1;
-
-/// Channel data may be out of date. This is set when the receiver is unable to validate incoming data from the transmitter and has therefore resent the last valid data it received.
-///
-/// RADIO_RC_CHANNELS_FLAGS_OUTDATED
-const RadioRcChannelsFlags radioRcChannelsFlagsOutdated = 2;
-
-/// Flags indicating errors in a GPS receiver.
-///
-/// GPS_SYSTEM_ERROR_FLAGS
-typedef GpsSystemErrorFlags = int;
-
-/// There are problems with incoming correction streams.
-///
-/// GPS_SYSTEM_ERROR_INCOMING_CORRECTIONS
-const GpsSystemErrorFlags gpsSystemErrorIncomingCorrections = 1;
-
-/// There are problems with the configuration.
-///
-/// GPS_SYSTEM_ERROR_CONFIGURATION
-const GpsSystemErrorFlags gpsSystemErrorConfiguration = 2;
-
-/// There are problems with the software on the GPS receiver.
-///
-/// GPS_SYSTEM_ERROR_SOFTWARE
-const GpsSystemErrorFlags gpsSystemErrorSoftware = 4;
-
-/// There are problems with an antenna connected to the GPS receiver.
-///
-/// GPS_SYSTEM_ERROR_ANTENNA
-const GpsSystemErrorFlags gpsSystemErrorAntenna = 8;
-
-/// There are problems handling all incoming events.
-///
-/// GPS_SYSTEM_ERROR_EVENT_CONGESTION
-const GpsSystemErrorFlags gpsSystemErrorEventCongestion = 16;
-
-/// The GPS receiver CPU is overloaded.
-///
-/// GPS_SYSTEM_ERROR_CPU_OVERLOAD
-const GpsSystemErrorFlags gpsSystemErrorCpuOverload = 32;
-
-/// The GPS receiver is experiencing output congestion.
-///
-/// GPS_SYSTEM_ERROR_OUTPUT_CONGESTION
-const GpsSystemErrorFlags gpsSystemErrorOutputCongestion = 64;
-
-/// Signal authentication state in a GPS receiver.
-///
-/// GPS_AUTHENTICATION_STATE
-typedef GpsAuthenticationState = int;
-
-/// The GPS receiver does not provide GPS signal authentication info.
-///
-/// GPS_AUTHENTICATION_STATE_UNKNOWN
-const GpsAuthenticationState gpsAuthenticationStateUnknown = 0;
-
-/// The GPS receiver is initializing signal authentication.
-///
-/// GPS_AUTHENTICATION_STATE_INITIALIZING
-const GpsAuthenticationState gpsAuthenticationStateInitializing = 1;
-
-/// The GPS receiver encountered an error while initializing signal authentication.
-///
-/// GPS_AUTHENTICATION_STATE_ERROR
-const GpsAuthenticationState gpsAuthenticationStateError = 2;
-
-/// The GPS receiver has correctly authenticated all signals.
-///
-/// GPS_AUTHENTICATION_STATE_OK
-const GpsAuthenticationState gpsAuthenticationStateOk = 3;
-
-/// GPS signal authentication is disabled on the receiver.
-///
-/// GPS_AUTHENTICATION_STATE_DISABLED
-const GpsAuthenticationState gpsAuthenticationStateDisabled = 4;
-
-/// Signal jamming state in a GPS receiver.
-///
-/// GPS_JAMMING_STATE
-typedef GpsJammingState = int;
+/// MARSH_TYPE_MANAGER
+const MarshType marshTypeManager = 100;
 
-/// The GPS receiver does not provide GPS signal jamming info.
+/// Component simulating flight dynamics of the aircraft.
 ///
-/// GPS_JAMMING_STATE_UNKNOWN
-const GpsJammingState gpsJammingStateUnknown = 0;
+/// MARSH_TYPE_FLIGHT_MODEL
+const MarshType marshTypeFlightModel = 101;
 
-/// The GPS receiver detected no signal jamming.
+/// Component providing pilot control inputs.
 ///
-/// GPS_JAMMING_STATE_NOT_JAMMED
-const GpsJammingState gpsJammingStateNotJammed = 1;
+/// MARSH_TYPE_CONTROLS
+const MarshType marshTypeControls = 102;
 
-/// The GPS receiver detected and mitigated signal jamming.
+/// Component showing the visual situation to the pilot.
 ///
-/// GPS_JAMMING_STATE_MITIGATED
-const GpsJammingState gpsJammingStateMitigated = 2;
+/// MARSH_TYPE_VISUALISATION
+const MarshType marshTypeVisualisation = 103;
 
-/// The GPS receiver detected signal jamming.
+/// Component implementing pilot instrument panel.
 ///
-/// GPS_JAMMING_STATE_DETECTED
-const GpsJammingState gpsJammingStateDetected = 3;
+/// MARSH_TYPE_INSTRUMENTS
+const MarshType marshTypeInstruments = 104;
 
-/// Signal spoofing state in a GPS receiver.
+/// Component that moves the entire cockpit for motion cueing.
 ///
-/// GPS_SPOOFING_STATE
-typedef GpsSpoofingState = int;
+/// MARSH_TYPE_MOTION_PLATFORM
+const MarshType marshTypeMotionPlatform = 105;
 
-/// The GPS receiver does not provide GPS signal spoofing info.
+/// Component for in-seat motion cueing.
 ///
-/// GPS_SPOOFING_STATE_UNKNOWN
-const GpsSpoofingState gpsSpoofingStateUnknown = 0;
+/// MARSH_TYPE_GSEAT
+const MarshType marshTypeGseat = 106;
 
-/// The GPS receiver detected no signal spoofing.
+/// Component providing gaze data of pilot eyes.
 ///
-/// GPS_SPOOFING_STATE_NOT_SPOOFED
-const GpsSpoofingState gpsSpoofingStateNotSpoofed = 1;
+/// MARSH_TYPE_EYE_TRACKER
+const MarshType marshTypeEyeTracker = 107;
 
-/// The GPS receiver detected and mitigated signal spoofing.
+/// Component measuring and actuating forces on pilot control inputs.
 ///
-/// GPS_SPOOFING_STATE_MITIGATED
-const GpsSpoofingState gpsSpoofingStateMitigated = 2;
+/// MARSH_TYPE_CONTROL_LOADING
+const MarshType marshTypeControlLoading = 108;
 
-/// The GPS receiver detected signal spoofing but still has a fix.
+/// Component providing vibrations for system identification, road rumble, gusts, etc.
 ///
-/// GPS_SPOOFING_STATE_DETECTED
-const GpsSpoofingState gpsSpoofingStateDetected = 3;
+/// MARSH_TYPE_VIBRATION_SOURCE
+const MarshType marshTypeVibrationSource = 109;
 
-/// State of RAIM processing.
+/// Component providing target for the pilot to follow like controls positions, aircraft state, ILS path etc.
 ///
-/// GPS_RAIM_STATE
-typedef GpsRaimState = int;
+/// MARSH_TYPE_PILOT_TARGET
+const MarshType marshTypePilotTarget = 110;
 
-/// RAIM capability is unknown.
+/// Principal component controlling the main scenario of a given test, (unlike lower level MARSH_TYPE_PILOT_TARGET or MARSH_TYPE_MANAGER for overall communication).
 ///
-/// GPS_RAIM_STATE_UNKNOWN
-const GpsRaimState gpsRaimStateUnknown = 0;
+/// MARSH_TYPE_EXPERIMENT_DIRECTOR
+const MarshType marshTypeExperimentDirector = 111;
 
-/// RAIM is disabled.
+/// These values are MARSH-specific modes intended to be sent in custom_mode field of HEARTBEAT message.
+/// Prefer defining values in the most significant byte (between 2^24 and 2^31) to leave the lower three bytes to contain a message id
 ///
-/// GPS_RAIM_STATE_DISABLED
-const GpsRaimState gpsRaimStateDisabled = 1;
+/// MARSH_MODE_FLAGS
+typedef MarshModeFlags = int;
 
-/// RAIM integrity check was successful.
+/// Request Manager to only send one specific message, advised for very resource limited nodes or with control flow limitations like Simulink.
+/// That message id should be in the lower three bytes of the mode, which can be done by adding it to the flags.
 ///
-/// GPS_RAIM_STATE_OK
-const GpsRaimState gpsRaimStateOk = 2;
+/// MARSH_MODE_SINGLE_MESSAGE
+const MarshModeFlags marshModeSingleMessage = 16777216;
 
-/// RAIM integrity check failed.
+/// Request Manager to send every message going out to any of the clients.
 ///
-/// GPS_RAIM_STATE_FAILED
-const GpsRaimState gpsRaimStateFailed = 3;
+/// MARSH_MODE_ALL_MESSAGES
+const MarshModeFlags marshModeAllMessages = 33554432;
 
-/// Actuator groups to test in MAV_CMD_ACTUATOR_GROUP_TEST.
+/// Specific axis of pilot control inputs, with order corresponding to x, y, z, r fields in MANUAL_CONTROL message.
 ///
-/// ACTUATOR_TEST_GROUP
-typedef ActuatorTestGroup = int;
+/// CONTROL_AXIS
+typedef ControlAxis = int;
 
-/// Actuators that contribute to roll torque.
+/// Roll axis, with positive values corresponding to stick right movement, causing the vehicle to roll right. For helicopters this is lateral cyclic.
 ///
-/// ACTUATOR_TEST_GROUP_ROLL_TORQUE
-const ActuatorTestGroup actuatorTestGroupRollTorque = 0;
+/// CONTROL_AXIS_ROLL
+const ControlAxis controlAxisRoll = 0;
 
-/// Actuators that contribute to pitch torque.
+/// Pitch axis, with positive values corresponding to stick forward movement, causing the vehicle to move nose down. For helicopters this is longitudinal cyclic.
 ///
-/// ACTUATOR_TEST_GROUP_PITCH_TORQUE
-const ActuatorTestGroup actuatorTestGroupPitchTorque = 1;
+/// CONTROL_AXIS_PITCH
+const ControlAxis controlAxisPitch = 1;
 
-/// Actuators that contribute to yaw torque.
+/// Main thrust, with positive values corresponding to going faster and higher. For helicopters this is collective.
 ///
-/// ACTUATOR_TEST_GROUP_YAW_TORQUE
-const ActuatorTestGroup actuatorTestGroupYawTorque = 2;
+/// CONTROL_AXIS_THRUST
+const ControlAxis controlAxisThrust = 2;
 
-/// Actuators that affect collective tilt.
+/// Yaw axis, with positive values corresponding to pushing right pedal, causing the vehicle to face right direction. For helicopters this is tail collective.
 ///
-/// ACTUATOR_TEST_GROUP_COLLECTIVE_TILT
-const ActuatorTestGroup actuatorTestGroupCollectiveTilt = 3;
+/// CONTROL_AXIS_YAW
+const ControlAxis controlAxisYaw = 3;
 
-/// Source for GLOBAL_POSITION measurement or estimate.
+/// Usage of MANUAL_SETPOINT message, sent in mode_switch field.
 ///
-/// GLOBAL_POSITION_SRC
-typedef GlobalPositionSrc = int;
+/// MARSH_MANUAL_SETPOINT_MODE
+typedef MarshManualSetpointMode = int;
 
-/// Source is unknown or not one of the listed types.
+/// Values for target inceptors positions that the pilot should follow.
 ///
-/// GLOBAL_POSITION_UNKNOWN
-const GlobalPositionSrc globalPositionUnknown = 0;
+/// MARSH_MANUAL_SETPOINT_MODE_TARGET
+const MarshManualSetpointMode marshManualSetpointModeTarget = 0;
 
-/// Global Navigation Satellite System (e.g.: GPS, Galileo, Glonass, BeiDou).
+/// Values for inceptors trim positions, the exact meaning depends on the flight model.
 ///
-/// GLOBAL_POSITION_GNSS
-const GlobalPositionSrc globalPositionGnss = 1;
+/// MARSH_MANUAL_SETPOINT_MODE_TRIM
+const MarshManualSetpointMode marshManualSetpointModeTrim = 1;
 
-/// Vision system (e.g.: map matching).
+/// Mode of a motion platform system.
 ///
-/// GLOBAL_POSITION_VISION
-const GlobalPositionSrc globalPositionVision = 2;
+/// MOTION_PLATFORM_MODE
+typedef MotionPlatformMode = int;
 
-/// Pseudo-satellite system (performs GNSS-like function, but usually with transceiver beacons).
+/// Mode information is unsupported on this device.
 ///
-/// GLOBAL_POSITION_PSEUDOLITES
-const GlobalPositionSrc globalPositionPseudolites = 3;
+/// MOTION_PLATFORM_MODE_UNKNOWN
+const MotionPlatformMode motionPlatformModeUnknown = 0;
 
-/// Terrain referenced navigation.
+/// Mode is currently not available, but may be in different condition.
 ///
-/// GLOBAL_POSITION_TRN
-const GlobalPositionSrc globalPositionTrn = 4;
+/// MOTION_PLATFORM_MODE_UNINITIALIZED
+const MotionPlatformMode motionPlatformModeUninitialized = 1;
 
-/// Magnetic positioning.
+/// Platform actuators are turned off, but control system is responsive.
 ///
-/// GLOBAL_POSITION_MAGNETIC
-const GlobalPositionSrc globalPositionMagnetic = 5;
+/// MOTION_PLATFORM_MODE_OFF
+const MotionPlatformMode motionPlatformModeOff = 2;
 
-/// Estimated position based on various sensors (eg. a Kalman Filter).
+/// Platform is in the lowest position and/or locked, appropriate for personnel entry.
 ///
-/// GLOBAL_POSITION_ESTIMATOR
-const GlobalPositionSrc globalPositionEstimator = 6;
+/// MOTION_PLATFORM_MODE_SETTLED
+const MotionPlatformMode motionPlatformModeSettled = 3;
 
-/// Status flags for GLOBAL_POSITION
+/// Platform is in a neutral reference position, not accepting movement commands.
 ///
-/// GLOBAL_POSITION_FLAGS
-typedef GlobalPositionFlags = int;
+/// MOTION_PLATFORM_MODE_NEUTRAL
+const MotionPlatformMode motionPlatformModeNeutral = 4;
 
-/// Unhealthy sensor/estimator.
+/// Platform is stopped in any position, not accepting movement commands.
 ///
-/// GLOBAL_POSITION_UNHEALTHY
-const GlobalPositionFlags globalPositionUnhealthy = 1;
+/// MOTION_PLATFORM_MODE_FROZEN
+const MotionPlatformMode motionPlatformModeFrozen = 5;
 
-/// True if the data originates from or is consumed by the primary estimator.
+/// Platform is in any position, accepting movement commands.
 ///
-/// GLOBAL_POSITION_PRIMARY
-const GlobalPositionFlags globalPositionPrimary = 2;
+/// MOTION_PLATFORM_MODE_ENGAGED
+const MotionPlatformMode motionPlatformModeEngaged = 6;
 
-/// ESC firmware type identifier.
+/// General error state of a motion platform system.
 ///
-/// ESC_FIRMWARE
-typedef EscFirmware = int;
+/// MOTION_PLATFORM_HEALTH
+typedef MotionPlatformHealth = int;
 
-/// Unknown firmware.
+/// System is operating correctly.
 ///
-/// ESC_FIRMWARE_UNKNOWN
-const EscFirmware escFirmwareUnknown = 0;
+/// MOTION_PLATFORM_HEALTH_OK
+const MotionPlatformHealth motionPlatformHealthOk = 0;
 
-/// AM32 open source ESC firmware.
+/// There is at least one warning present, but operation can be continued.
 ///
-/// ESC_FIRMWARE_AM32
-const EscFirmware escFirmwareAm32 = 1;
+/// MOTION_PLATFORM_HEALTH_WARNING
+const MotionPlatformHealth motionPlatformHealthWarning = 1;
 
-/// Bluejay open source ESC firmware.
+/// There is a failure or misconfiguration that requires operator's attention for correct operation.
 ///
-/// ESC_FIRMWARE_BLUEJAY
-const EscFirmware escFirmwareBluejay = 2;
+/// MOTION_PLATFORM_HEALTH_ERROR
+const MotionPlatformHealth motionPlatformHealthError = 2;
 
-/// BLHeli32 ESC firmware.
+/// There is a major failure that requires immediate operator action to maintain safety.
 ///
-/// ESC_FIRMWARE_BLHELI32
-const EscFirmware escFirmwareBlheli32 = 3;
+/// MOTION_PLATFORM_HEALTH_CRITICAL
+const MotionPlatformHealth motionPlatformHealthCritical = 3;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
@@ -49770,955 +49464,13 @@ class HygrometerSensor implements MavlinkMessage {
   }
 }
 
-/// Global position measurement or estimate.
+/// Send data about a control axis from a control loading system. This is the primary message for logging data from MARSH_TYPE_CONTROL_LOADING.
 ///
-/// GLOBAL_POSITION
-class GlobalPosition implements MavlinkMessage {
-  static const int msgId = 296;
-
-  static const int crcExtra = 50;
-
-  static const int mavlinkEncodedLength = 35;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// time_usec
-  final uint64_t timeUsec;
-
-  /// Latitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lat
-  final int32_t lat;
-
-  /// Longitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lon
-  final int32_t lon;
-
-  /// Altitude (MSL - position-system specific value)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// alt
-  final float alt;
-
-  /// Altitude (WGS84 elipsoid)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// alt_ellipsoid
-  final float altEllipsoid;
-
-  /// Standard deviation of horizontal position error
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// eph
-  final float eph;
-
-  /// Standard deviation of vertical position error
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// epv
-  final float epv;
-
-  /// Sensor ID
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Source of position/estimate (such as GNSS, estimator, etc.)
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GlobalPositionSrc]
-  ///
-  /// source
-  final GlobalPositionSrc source;
-
-  /// Status flags
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GlobalPositionFlags]
-  ///
-  /// flags
-  final GlobalPositionFlags flags;
-
-  GlobalPosition({
-    required this.timeUsec,
-    required this.lat,
-    required this.lon,
-    required this.alt,
-    required this.altEllipsoid,
-    required this.eph,
-    required this.epv,
-    required this.id,
-    required this.source,
-    required this.flags,
-  });
-
-  GlobalPosition copyWith({
-    uint64_t? timeUsec,
-    int32_t? lat,
-    int32_t? lon,
-    float? alt,
-    float? altEllipsoid,
-    float? eph,
-    float? epv,
-    uint8_t? id,
-    GlobalPositionSrc? source,
-    GlobalPositionFlags? flags,
-  }) {
-    return GlobalPosition(
-      timeUsec: timeUsec ?? this.timeUsec,
-      lat: lat ?? this.lat,
-      lon: lon ?? this.lon,
-      alt: alt ?? this.alt,
-      altEllipsoid: altEllipsoid ?? this.altEllipsoid,
-      eph: eph ?? this.eph,
-      epv: epv ?? this.epv,
-      id: id ?? this.id,
-      source: source ?? this.source,
-      flags: flags ?? this.flags,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeUsec': timeUsec,
-        'lat': lat,
-        'lon': lon,
-        'alt': alt,
-        'altEllipsoid': altEllipsoid,
-        'eph': eph,
-        'epv': epv,
-        'id': id,
-        'source': source,
-        'flags': flags,
-      };
-
-  factory GlobalPosition.parse(ByteData data_) {
-    if (data_.lengthInBytes < GlobalPosition.mavlinkEncodedLength) {
-      var len = GlobalPosition.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUsec = data_.getUint64(0, Endian.little);
-    var lat = data_.getInt32(8, Endian.little);
-    var lon = data_.getInt32(12, Endian.little);
-    var alt = data_.getFloat32(16, Endian.little);
-    var altEllipsoid = data_.getFloat32(20, Endian.little);
-    var eph = data_.getFloat32(24, Endian.little);
-    var epv = data_.getFloat32(28, Endian.little);
-    var id = data_.getUint8(32);
-    var source = data_.getUint8(33);
-    var flags = data_.getUint8(34);
-
-    return GlobalPosition(
-        timeUsec: timeUsec,
-        lat: lat,
-        lon: lon,
-        alt: alt,
-        altEllipsoid: altEllipsoid,
-        eph: eph,
-        epv: epv,
-        id: id,
-        source: source,
-        flags: flags);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUsec, Endian.little);
-    data_.setInt32(8, lat, Endian.little);
-    data_.setInt32(12, lon, Endian.little);
-    data_.setFloat32(16, alt, Endian.little);
-    data_.setFloat32(20, altEllipsoid, Endian.little);
-    data_.setFloat32(24, eph, Endian.little);
-    data_.setFloat32(28, epv, Endian.little);
-    data_.setUint8(32, id);
-    data_.setUint8(33, source);
-    data_.setUint8(34, flags);
-    return data_;
-  }
-}
-
-/// Set temporary maximum limits for horizontal speed, vertical speed and yaw rate.
-/// The consumer must stream the current limits in VELOCITY_LIMITS at 1 Hz or more (when limits are being set).
-/// The consumer should latch the limits until a new limit is received or the mode is changed.
-///
-///
-/// SET_VELOCITY_LIMITS
-class SetVelocityLimits implements MavlinkMessage {
-  static const int msgId = 354;
-
-  static const int crcExtra = 210;
-
-  static const int mavlinkEncodedLength = 14;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Limit for horizontal movement in MAV_FRAME_LOCAL_NED. NaN: Field not used (ignore)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// horizontal_speed_limit
-  final float horizontalSpeedLimit;
-
-  /// Limit for vertical movement in MAV_FRAME_LOCAL_NED. NaN: Field not used (ignore)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// vertical_speed_limit
-  final float verticalSpeedLimit;
-
-  /// Limit for vehicle turn rate around its yaw axis. NaN: Field not used (ignore)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: rad/s
-  ///
-  /// yaw_rate_limit
-  final float yawRateLimit;
-
-  /// System ID (0 for broadcast).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_system
-  final uint8_t targetSystem;
-
-  /// Component ID (0 for broadcast).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_component
-  final uint8_t targetComponent;
-
-  SetVelocityLimits({
-    required this.horizontalSpeedLimit,
-    required this.verticalSpeedLimit,
-    required this.yawRateLimit,
-    required this.targetSystem,
-    required this.targetComponent,
-  });
-
-  SetVelocityLimits copyWith({
-    float? horizontalSpeedLimit,
-    float? verticalSpeedLimit,
-    float? yawRateLimit,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
-  }) {
-    return SetVelocityLimits(
-      horizontalSpeedLimit: horizontalSpeedLimit ?? this.horizontalSpeedLimit,
-      verticalSpeedLimit: verticalSpeedLimit ?? this.verticalSpeedLimit,
-      yawRateLimit: yawRateLimit ?? this.yawRateLimit,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'horizontalSpeedLimit': horizontalSpeedLimit,
-        'verticalSpeedLimit': verticalSpeedLimit,
-        'yawRateLimit': yawRateLimit,
-        'targetSystem': targetSystem,
-        'targetComponent': targetComponent,
-      };
-
-  factory SetVelocityLimits.parse(ByteData data_) {
-    if (data_.lengthInBytes < SetVelocityLimits.mavlinkEncodedLength) {
-      var len = SetVelocityLimits.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var horizontalSpeedLimit = data_.getFloat32(0, Endian.little);
-    var verticalSpeedLimit = data_.getFloat32(4, Endian.little);
-    var yawRateLimit = data_.getFloat32(8, Endian.little);
-    var targetSystem = data_.getUint8(12);
-    var targetComponent = data_.getUint8(13);
-
-    return SetVelocityLimits(
-        horizontalSpeedLimit: horizontalSpeedLimit,
-        verticalSpeedLimit: verticalSpeedLimit,
-        yawRateLimit: yawRateLimit,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, horizontalSpeedLimit, Endian.little);
-    data_.setFloat32(4, verticalSpeedLimit, Endian.little);
-    data_.setFloat32(8, yawRateLimit, Endian.little);
-    data_.setUint8(12, targetSystem);
-    data_.setUint8(13, targetComponent);
-    return data_;
-  }
-}
-
-/// Current limits for horizontal speed, vertical speed and yaw rate, as set by SET_VELOCITY_LIMITS.
-///
-/// VELOCITY_LIMITS
-class VelocityLimits implements MavlinkMessage {
-  static const int msgId = 355;
-
-  static const int crcExtra = 6;
-
-  static const int mavlinkEncodedLength = 12;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Limit for horizontal movement in MAV_FRAME_LOCAL_NED. NaN: No limit applied
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// horizontal_speed_limit
-  final float horizontalSpeedLimit;
-
-  /// Limit for vertical movement in MAV_FRAME_LOCAL_NED. NaN: No limit applied
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// vertical_speed_limit
-  final float verticalSpeedLimit;
-
-  /// Limit for vehicle turn rate around its yaw axis. NaN: No limit applied
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: rad/s
-  ///
-  /// yaw_rate_limit
-  final float yawRateLimit;
-
-  VelocityLimits({
-    required this.horizontalSpeedLimit,
-    required this.verticalSpeedLimit,
-    required this.yawRateLimit,
-  });
-
-  VelocityLimits copyWith({
-    float? horizontalSpeedLimit,
-    float? verticalSpeedLimit,
-    float? yawRateLimit,
-  }) {
-    return VelocityLimits(
-      horizontalSpeedLimit: horizontalSpeedLimit ?? this.horizontalSpeedLimit,
-      verticalSpeedLimit: verticalSpeedLimit ?? this.verticalSpeedLimit,
-      yawRateLimit: yawRateLimit ?? this.yawRateLimit,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'horizontalSpeedLimit': horizontalSpeedLimit,
-        'verticalSpeedLimit': verticalSpeedLimit,
-        'yawRateLimit': yawRateLimit,
-      };
-
-  factory VelocityLimits.parse(ByteData data_) {
-    if (data_.lengthInBytes < VelocityLimits.mavlinkEncodedLength) {
-      var len = VelocityLimits.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var horizontalSpeedLimit = data_.getFloat32(0, Endian.little);
-    var verticalSpeedLimit = data_.getFloat32(4, Endian.little);
-    var yawRateLimit = data_.getFloat32(8, Endian.little);
-
-    return VelocityLimits(
-        horizontalSpeedLimit: horizontalSpeedLimit,
-        verticalSpeedLimit: verticalSpeedLimit,
-        yawRateLimit: yawRateLimit);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, horizontalSpeedLimit, Endian.little);
-    data_.setFloat32(4, verticalSpeedLimit, Endian.little);
-    data_.setFloat32(8, yawRateLimit, Endian.little);
-    return data_;
-  }
-}
-
-/// Battery dynamic information.
-/// This should be streamed (nominally at 1Hz).
-/// Static/invariant battery information is sent in BATTERY_INFO.
-/// Note that smart batteries should set the MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL bit to indicate that supplied capacity values are relative to a battery that is known to be full.
-/// Power monitors would not set this bit, indicating that capacity_consumed is relative to drone power-on, and that other values are estimated based on the assumption that the battery was full on power-on.
-///
-///
-/// BATTERY_STATUS_V2
-class BatteryStatusV2 implements MavlinkMessage {
-  static const int msgId = 369;
-
-  static const int crcExtra = 151;
-
-  static const int mavlinkEncodedLength = 24;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Battery voltage (total). NaN: field not provided.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: V
-  ///
-  /// voltage
-  final float voltage;
-
-  /// Battery current (through all cells/loads). Positive value when discharging and negative if charging. NaN: field not provided.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: A
-  ///
-  /// current
-  final float current;
-
-  /// Consumed charge. NaN: field not provided. This is either the consumption since power-on or since the battery was full, depending on the value of MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: Ah
-  ///
-  /// capacity_consumed
-  final float capacityConsumed;
-
-  /// Remaining charge (until empty). NaN: field not provided. Note: If MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL is unset, this value is based on the assumption the battery was full when the system was powered.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: Ah
-  ///
-  /// capacity_remaining
-  final float capacityRemaining;
-
-  /// Fault, health, readiness, and other status indications.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// enum: [MavBatteryStatusFlags]
-  ///
-  /// status_flags
-  final MavBatteryStatusFlags statusFlags;
-
-  /// Temperature of the whole battery pack (not internal electronics). INT16_MAX field not provided.
-  ///
-  /// MAVLink type: int16_t
-  ///
-  /// units: cdegC
-  ///
-  /// temperature
-  final int16_t temperature;
-
-  /// Battery ID
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Remaining battery energy. Values: [0-100], UINT8_MAX: field not provided.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// units: %
-  ///
-  /// percent_remaining
-  final uint8_t percentRemaining;
-
-  BatteryStatusV2({
-    required this.voltage,
-    required this.current,
-    required this.capacityConsumed,
-    required this.capacityRemaining,
-    required this.statusFlags,
-    required this.temperature,
-    required this.id,
-    required this.percentRemaining,
-  });
-
-  BatteryStatusV2 copyWith({
-    float? voltage,
-    float? current,
-    float? capacityConsumed,
-    float? capacityRemaining,
-    MavBatteryStatusFlags? statusFlags,
-    int16_t? temperature,
-    uint8_t? id,
-    uint8_t? percentRemaining,
-  }) {
-    return BatteryStatusV2(
-      voltage: voltage ?? this.voltage,
-      current: current ?? this.current,
-      capacityConsumed: capacityConsumed ?? this.capacityConsumed,
-      capacityRemaining: capacityRemaining ?? this.capacityRemaining,
-      statusFlags: statusFlags ?? this.statusFlags,
-      temperature: temperature ?? this.temperature,
-      id: id ?? this.id,
-      percentRemaining: percentRemaining ?? this.percentRemaining,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'voltage': voltage,
-        'current': current,
-        'capacityConsumed': capacityConsumed,
-        'capacityRemaining': capacityRemaining,
-        'statusFlags': statusFlags,
-        'temperature': temperature,
-        'id': id,
-        'percentRemaining': percentRemaining,
-      };
-
-  factory BatteryStatusV2.parse(ByteData data_) {
-    if (data_.lengthInBytes < BatteryStatusV2.mavlinkEncodedLength) {
-      var len = BatteryStatusV2.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var voltage = data_.getFloat32(0, Endian.little);
-    var current = data_.getFloat32(4, Endian.little);
-    var capacityConsumed = data_.getFloat32(8, Endian.little);
-    var capacityRemaining = data_.getFloat32(12, Endian.little);
-    var statusFlags = data_.getUint32(16, Endian.little);
-    var temperature = data_.getInt16(20, Endian.little);
-    var id = data_.getUint8(22);
-    var percentRemaining = data_.getUint8(23);
-
-    return BatteryStatusV2(
-        voltage: voltage,
-        current: current,
-        capacityConsumed: capacityConsumed,
-        capacityRemaining: capacityRemaining,
-        statusFlags: statusFlags,
-        temperature: temperature,
-        id: id,
-        percentRemaining: percentRemaining);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, voltage, Endian.little);
-    data_.setFloat32(4, current, Endian.little);
-    data_.setFloat32(8, capacityConsumed, Endian.little);
-    data_.setFloat32(12, capacityRemaining, Endian.little);
-    data_.setUint32(16, statusFlags, Endian.little);
-    data_.setInt16(20, temperature, Endian.little);
-    data_.setUint8(22, id);
-    data_.setUint8(23, percentRemaining);
-    return data_;
-  }
-}
-
-/// Emitted during mission execution when control reaches MAV_CMD_GROUP_START.
-///
-/// GROUP_START
-class GroupStart implements MavlinkMessage {
-  static const int msgId = 414;
-
-  static const int crcExtra = 109;
-
-  static const int mavlinkEncodedLength = 16;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX Epoch time or time since system boot).
-  /// The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// time_usec
-  final uint64_t timeUsec;
-
-  /// Mission-unique group id (from MAV_CMD_GROUP_START).
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// group_id
-  final uint32_t groupId;
-
-  /// CRC32 checksum of current plan for MAV_MISSION_TYPE_ALL. As defined in MISSION_CHECKSUM message.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// mission_checksum
-  final uint32_t missionChecksum;
-
-  GroupStart({
-    required this.timeUsec,
-    required this.groupId,
-    required this.missionChecksum,
-  });
-
-  GroupStart copyWith({
-    uint64_t? timeUsec,
-    uint32_t? groupId,
-    uint32_t? missionChecksum,
-  }) {
-    return GroupStart(
-      timeUsec: timeUsec ?? this.timeUsec,
-      groupId: groupId ?? this.groupId,
-      missionChecksum: missionChecksum ?? this.missionChecksum,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeUsec': timeUsec,
-        'groupId': groupId,
-        'missionChecksum': missionChecksum,
-      };
-
-  factory GroupStart.parse(ByteData data_) {
-    if (data_.lengthInBytes < GroupStart.mavlinkEncodedLength) {
-      var len = GroupStart.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUsec = data_.getUint64(0, Endian.little);
-    var groupId = data_.getUint32(8, Endian.little);
-    var missionChecksum = data_.getUint32(12, Endian.little);
-
-    return GroupStart(
-        timeUsec: timeUsec, groupId: groupId, missionChecksum: missionChecksum);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUsec, Endian.little);
-    data_.setUint32(8, groupId, Endian.little);
-    data_.setUint32(12, missionChecksum, Endian.little);
-    return data_;
-  }
-}
-
-/// Emitted during mission execution when control reaches MAV_CMD_GROUP_END.
-///
-/// GROUP_END
-class GroupEnd implements MavlinkMessage {
-  static const int msgId = 415;
-
-  static const int crcExtra = 161;
-
-  static const int mavlinkEncodedLength = 16;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX Epoch time or time since system boot).
-  /// The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// time_usec
-  final uint64_t timeUsec;
-
-  /// Mission-unique group id (from MAV_CMD_GROUP_END).
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// group_id
-  final uint32_t groupId;
-
-  /// CRC32 checksum of current plan for MAV_MISSION_TYPE_ALL. As defined in MISSION_CHECKSUM message.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// mission_checksum
-  final uint32_t missionChecksum;
-
-  GroupEnd({
-    required this.timeUsec,
-    required this.groupId,
-    required this.missionChecksum,
-  });
-
-  GroupEnd copyWith({
-    uint64_t? timeUsec,
-    uint32_t? groupId,
-    uint32_t? missionChecksum,
-  }) {
-    return GroupEnd(
-      timeUsec: timeUsec ?? this.timeUsec,
-      groupId: groupId ?? this.groupId,
-      missionChecksum: missionChecksum ?? this.missionChecksum,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeUsec': timeUsec,
-        'groupId': groupId,
-        'missionChecksum': missionChecksum,
-      };
-
-  factory GroupEnd.parse(ByteData data_) {
-    if (data_.lengthInBytes < GroupEnd.mavlinkEncodedLength) {
-      var len = GroupEnd.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUsec = data_.getUint64(0, Endian.little);
-    var groupId = data_.getUint32(8, Endian.little);
-    var missionChecksum = data_.getUint32(12, Endian.little);
-
-    return GroupEnd(
-        timeUsec: timeUsec, groupId: groupId, missionChecksum: missionChecksum);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUsec, Endian.little);
-    data_.setUint32(8, groupId, Endian.little);
-    data_.setUint32(12, missionChecksum, Endian.little);
-    return data_;
-  }
-}
-
-/// RC channel outputs from a MAVLink RC receiver for input to a flight controller or other components (allows an RC receiver to connect via MAVLink instead of some other protocol such as PPM-Sum or S.BUS).
-/// Note that this is not intended to be an over-the-air format, and does not replace RC_CHANNELS and similar messages reported by the flight controller.
-/// The target_system field should normally be set to the system id of the system to control, typically the flight controller.
-/// The target_component field can normally be set to 0, so that all components of the system can receive the message.
-/// The channels array field can publish up to 32 channels; the number of channel items used in the array is specified in the count field.
-/// The time_last_update_ms field contains the timestamp of the last received valid channels data in the receiver's time domain.
-/// The count field indicates the first index of the channel array that is not used for channel data (this and later indexes are zero-filled).
-/// The RADIO_RC_CHANNELS_FLAGS_OUTDATED flag is set by the receiver if the channels data is not up-to-date (for example, if new data from the transmitter could not be validated so the last valid data is resent).
-/// The RADIO_RC_CHANNELS_FLAGS_FAILSAFE failsafe flag is set by the receiver if the receiver's failsafe condition is met (implementation dependent, e.g., connection to the RC radio is lost).
-/// In this case time_last_update_ms still contains the timestamp of the last valid channels data, but the content of the channels data is not defined by the protocol (it is up to the implementation of the receiver).
-/// For instance, the channels data could contain failsafe values configured in the receiver; the default is to carry the last valid data.
-/// Note: The RC channels fields are extensions to ensure that they are located at the end of the serialized payload and subject to MAVLink's trailing-zero trimming.
-///
-///
-/// RADIO_RC_CHANNELS
-class RadioRcChannels implements MavlinkMessage {
-  static const int msgId = 420;
-
-  static const int crcExtra = 20;
-
-  static const int mavlinkEncodedLength = 73;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Time when the data in the channels field were last updated (time since boot in the receiver's time domain).
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// units: ms
-  ///
-  /// time_last_update_ms
-  final uint32_t timeLastUpdateMs;
-
-  /// Radio RC channels status flags.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// enum: [RadioRcChannelsFlags]
-  ///
-  /// flags
-  final RadioRcChannelsFlags flags;
-
-  /// System ID (ID of target system, normally flight controller).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_system
-  final uint8_t targetSystem;
-
-  /// Component ID (normally 0 for broadcast).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_component
-  final uint8_t targetComponent;
-
-  /// Total number of RC channels being received. This can be larger than 32, indicating that more channels are available but not given in this message.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// count
-  final uint8_t count;
-
-  /// RC channels.
-  /// Channel values are in centered 13 bit format. Range is -4096 to 4096, center is 0. Conversion to PWM is x * 5/32 + 1500.
-  /// Channels with indexes equal or above count should be set to 0, to benefit from MAVLink's trailing-zero trimming.
-  ///
-  /// MAVLink type: int16_t[32]
-  ///
-  /// Extensions field for MAVLink 2.
-  ///
-  /// channels
-  final List<int16_t> channels;
-
-  RadioRcChannels({
-    required this.timeLastUpdateMs,
-    required this.flags,
-    required this.targetSystem,
-    required this.targetComponent,
-    required this.count,
-    required this.channels,
-  });
-
-  RadioRcChannels copyWith({
-    uint32_t? timeLastUpdateMs,
-    RadioRcChannelsFlags? flags,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
-    uint8_t? count,
-    List<int16_t>? channels,
-  }) {
-    return RadioRcChannels(
-      timeLastUpdateMs: timeLastUpdateMs ?? this.timeLastUpdateMs,
-      flags: flags ?? this.flags,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
-      count: count ?? this.count,
-      channels: channels ?? this.channels,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeLastUpdateMs': timeLastUpdateMs,
-        'flags': flags,
-        'targetSystem': targetSystem,
-        'targetComponent': targetComponent,
-        'count': count,
-        'channels': channels,
-      };
-
-  factory RadioRcChannels.parse(ByteData data_) {
-    if (data_.lengthInBytes < RadioRcChannels.mavlinkEncodedLength) {
-      var len = RadioRcChannels.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeLastUpdateMs = data_.getUint32(0, Endian.little);
-    var flags = data_.getUint16(4, Endian.little);
-    var targetSystem = data_.getUint8(6);
-    var targetComponent = data_.getUint8(7);
-    var count = data_.getUint8(8);
-    var channels = MavlinkMessage.asInt16List(data_, 9, 32);
-
-    return RadioRcChannels(
-        timeLastUpdateMs: timeLastUpdateMs,
-        flags: flags,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent,
-        count: count,
-        channels: channels);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, timeLastUpdateMs, Endian.little);
-    data_.setUint16(4, flags, Endian.little);
-    data_.setUint8(6, targetSystem);
-    data_.setUint8(7, targetComponent);
-    data_.setUint8(8, count);
-    MavlinkMessage.setInt16List(data_, 9, channels);
-    return data_;
-  }
-}
-
-/// Information about key components of GNSS receivers, like signal authentication, interference and system errors.
-///
-/// GNSS_INTEGRITY
-class GnssIntegrity implements MavlinkMessage {
-  static const int msgId = 441;
-
-  static const int crcExtra = 169;
+/// CONTROL_LOADING_AXIS
+class ControlLoadingAxis implements MavlinkMessage {
+  static const int msgId = 52501;
+
+  static const int crcExtra = 240;
 
   static const int mavlinkEncodedLength = 17;
 
@@ -50728,482 +49480,125 @@ class GnssIntegrity implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => crcExtra;
 
-  /// Errors in the GPS system.
+  /// Timestamp (time since system boot).
   ///
   /// MAVLink type: uint32_t
   ///
-  /// enum: [GpsSystemErrorFlags]
+  /// units: ms
   ///
-  /// system_errors
-  final GpsSystemErrorFlags systemErrors;
+  /// time_boot_ms
+  final uint32_t timeBootMs;
 
-  /// Horizontal expected accuracy using satellites successfully validated using RAIM.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: cm
-  ///
-  /// raim_hfom
-  final uint16_t raimHfom;
-
-  /// Vertical expected accuracy using satellites successfully validated using RAIM.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: cm
-  ///
-  /// raim_vfom
-  final uint16_t raimVfom;
-
-  /// GNSS receiver id. Must match instance ids of other messages from same receiver.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Signal authentication state of the GPS system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsAuthenticationState]
-  ///
-  /// authentication_state
-  final GpsAuthenticationState authenticationState;
-
-  /// Signal jamming state of the GPS system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsJammingState]
-  ///
-  /// jamming_state
-  final GpsJammingState jammingState;
-
-  /// Signal spoofing state of the GPS system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsSpoofingState]
-  ///
-  /// spoofing_state
-  final GpsSpoofingState spoofingState;
-
-  /// The state of the RAIM processing.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsRaimState]
-  ///
-  /// raim_state
-  final GpsRaimState raimState;
-
-  /// An abstract value representing the estimated quality of incoming corrections, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// corrections_quality
-  final uint8_t correctionsQuality;
-
-  /// An abstract value representing the overall status of the receiver, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// system_status_summary
-  final uint8_t systemStatusSummary;
-
-  /// An abstract value representing the quality of incoming GNSS signals, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// gnss_signal_quality
-  final uint8_t gnssSignalQuality;
-
-  /// An abstract value representing the estimated PPK quality, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// post_processing_quality
-  final uint8_t postProcessingQuality;
-
-  GnssIntegrity({
-    required this.systemErrors,
-    required this.raimHfom,
-    required this.raimVfom,
-    required this.id,
-    required this.authenticationState,
-    required this.jammingState,
-    required this.spoofingState,
-    required this.raimState,
-    required this.correctionsQuality,
-    required this.systemStatusSummary,
-    required this.gnssSignalQuality,
-    required this.postProcessingQuality,
-  });
-
-  GnssIntegrity copyWith({
-    GpsSystemErrorFlags? systemErrors,
-    uint16_t? raimHfom,
-    uint16_t? raimVfom,
-    uint8_t? id,
-    GpsAuthenticationState? authenticationState,
-    GpsJammingState? jammingState,
-    GpsSpoofingState? spoofingState,
-    GpsRaimState? raimState,
-    uint8_t? correctionsQuality,
-    uint8_t? systemStatusSummary,
-    uint8_t? gnssSignalQuality,
-    uint8_t? postProcessingQuality,
-  }) {
-    return GnssIntegrity(
-      systemErrors: systemErrors ?? this.systemErrors,
-      raimHfom: raimHfom ?? this.raimHfom,
-      raimVfom: raimVfom ?? this.raimVfom,
-      id: id ?? this.id,
-      authenticationState: authenticationState ?? this.authenticationState,
-      jammingState: jammingState ?? this.jammingState,
-      spoofingState: spoofingState ?? this.spoofingState,
-      raimState: raimState ?? this.raimState,
-      correctionsQuality: correctionsQuality ?? this.correctionsQuality,
-      systemStatusSummary: systemStatusSummary ?? this.systemStatusSummary,
-      gnssSignalQuality: gnssSignalQuality ?? this.gnssSignalQuality,
-      postProcessingQuality:
-          postProcessingQuality ?? this.postProcessingQuality,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'systemErrors': systemErrors,
-        'raimHfom': raimHfom,
-        'raimVfom': raimVfom,
-        'id': id,
-        'authenticationState': authenticationState,
-        'jammingState': jammingState,
-        'spoofingState': spoofingState,
-        'raimState': raimState,
-        'correctionsQuality': correctionsQuality,
-        'systemStatusSummary': systemStatusSummary,
-        'gnssSignalQuality': gnssSignalQuality,
-        'postProcessingQuality': postProcessingQuality,
-      };
-
-  factory GnssIntegrity.parse(ByteData data_) {
-    if (data_.lengthInBytes < GnssIntegrity.mavlinkEncodedLength) {
-      var len = GnssIntegrity.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var systemErrors = data_.getUint32(0, Endian.little);
-    var raimHfom = data_.getUint16(4, Endian.little);
-    var raimVfom = data_.getUint16(6, Endian.little);
-    var id = data_.getUint8(8);
-    var authenticationState = data_.getUint8(9);
-    var jammingState = data_.getUint8(10);
-    var spoofingState = data_.getUint8(11);
-    var raimState = data_.getUint8(12);
-    var correctionsQuality = data_.getUint8(13);
-    var systemStatusSummary = data_.getUint8(14);
-    var gnssSignalQuality = data_.getUint8(15);
-    var postProcessingQuality = data_.getUint8(16);
-
-    return GnssIntegrity(
-        systemErrors: systemErrors,
-        raimHfom: raimHfom,
-        raimVfom: raimVfom,
-        id: id,
-        authenticationState: authenticationState,
-        jammingState: jammingState,
-        spoofingState: spoofingState,
-        raimState: raimState,
-        correctionsQuality: correctionsQuality,
-        systemStatusSummary: systemStatusSummary,
-        gnssSignalQuality: gnssSignalQuality,
-        postProcessingQuality: postProcessingQuality);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, systemErrors, Endian.little);
-    data_.setUint16(4, raimHfom, Endian.little);
-    data_.setUint16(6, raimVfom, Endian.little);
-    data_.setUint8(8, id);
-    data_.setUint8(9, authenticationState);
-    data_.setUint8(10, jammingState);
-    data_.setUint8(11, spoofingState);
-    data_.setUint8(12, raimState);
-    data_.setUint8(13, correctionsQuality);
-    data_.setUint8(14, systemStatusSummary);
-    data_.setUint8(15, gnssSignalQuality);
-    data_.setUint8(16, postProcessingQuality);
-    return data_;
-  }
-}
-
-/// Current motion information from sensors on a target
-///
-/// TARGET_ABSOLUTE
-class TargetAbsolute implements MavlinkMessage {
-  static const int msgId = 510;
-
-  static const int crcExtra = 245;
-
-  static const int mavlinkEncodedLength = 106;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX epoch time).
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// timestamp
-  final uint64_t timestamp;
-
-  /// Target's latitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lat
-  final int32_t lat;
-
-  /// Target's longitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lon
-  final int32_t lon;
-
-  /// Target's altitude (AMSL)
+  /// Axis position
   ///
   /// MAVLink type: float
   ///
-  /// units: m
+  /// units: deg
   ///
-  /// alt
-  final float alt;
+  /// position
+  final float position;
 
-  /// Target's velocity in its body frame
+  /// Axis velocity
   ///
-  /// MAVLink type: float[3]
+  /// MAVLink type: float
   ///
-  /// units: m/s
+  /// units: deg/s
   ///
-  /// vel
-  final List<float> vel;
+  /// velocity
+  final float velocity;
 
-  /// Linear target's acceleration in its body frame
+  /// Force applied in the pilot in the direction of movement axis (not gripping force), measured at the position of pilot's third finger (ring). Unit N (Newton), currently not part of mavschema.xsd
   ///
-  /// MAVLink type: float[3]
+  /// MAVLink type: float
   ///
-  /// units: m/s/s
-  ///
-  /// acc
-  final List<float> acc;
+  /// force
+  final float force;
 
-  /// Quaternion of the target's orientation from its body frame to the vehicle's NED frame.
-  ///
-  /// MAVLink type: float[4]
-  ///
-  /// q_target
-  final List<float> qTarget;
-
-  /// Target's roll, pitch and yaw rates
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: rad/s
-  ///
-  /// rates
-  final List<float> rates;
-
-  /// Standard deviation of horizontal (eph) and vertical (epv) position errors
-  ///
-  /// MAVLink type: float[2]
-  ///
-  /// units: m
-  ///
-  /// position_std
-  final List<float> positionStd;
-
-  /// Standard deviation of the target's velocity in its body frame
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m/s
-  ///
-  /// vel_std
-  final List<float> velStd;
-
-  /// Standard deviation of the target's acceleration in its body frame
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m/s/s
-  ///
-  /// acc_std
-  final List<float> accStd;
-
-  /// The ID of the target if multiple targets are present
+  /// Control axis on which the measurements were taken.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// id
-  final uint8_t id;
+  /// enum: [ControlAxis]
+  ///
+  /// axis
+  final ControlAxis axis;
 
-  /// Bitmap to indicate the sensor's reporting capabilities
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [TargetAbsoluteSensorCapabilityFlags]
-  ///
-  /// sensor_capabilities
-  final TargetAbsoluteSensorCapabilityFlags sensorCapabilities;
-
-  TargetAbsolute({
-    required this.timestamp,
-    required this.lat,
-    required this.lon,
-    required this.alt,
-    required this.vel,
-    required this.acc,
-    required this.qTarget,
-    required this.rates,
-    required this.positionStd,
-    required this.velStd,
-    required this.accStd,
-    required this.id,
-    required this.sensorCapabilities,
+  ControlLoadingAxis({
+    required this.timeBootMs,
+    required this.position,
+    required this.velocity,
+    required this.force,
+    required this.axis,
   });
 
-  TargetAbsolute copyWith({
-    uint64_t? timestamp,
-    int32_t? lat,
-    int32_t? lon,
-    float? alt,
-    List<float>? vel,
-    List<float>? acc,
-    List<float>? qTarget,
-    List<float>? rates,
-    List<float>? positionStd,
-    List<float>? velStd,
-    List<float>? accStd,
-    uint8_t? id,
-    TargetAbsoluteSensorCapabilityFlags? sensorCapabilities,
+  ControlLoadingAxis copyWith({
+    uint32_t? timeBootMs,
+    float? position,
+    float? velocity,
+    float? force,
+    ControlAxis? axis,
   }) {
-    return TargetAbsolute(
-      timestamp: timestamp ?? this.timestamp,
-      lat: lat ?? this.lat,
-      lon: lon ?? this.lon,
-      alt: alt ?? this.alt,
-      vel: vel ?? this.vel,
-      acc: acc ?? this.acc,
-      qTarget: qTarget ?? this.qTarget,
-      rates: rates ?? this.rates,
-      positionStd: positionStd ?? this.positionStd,
-      velStd: velStd ?? this.velStd,
-      accStd: accStd ?? this.accStd,
-      id: id ?? this.id,
-      sensorCapabilities: sensorCapabilities ?? this.sensorCapabilities,
+    return ControlLoadingAxis(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      position: position ?? this.position,
+      velocity: velocity ?? this.velocity,
+      force: force ?? this.force,
+      axis: axis ?? this.axis,
     );
   }
 
   @override
   Map<String, dynamic> toJson() => {
         'msgId': msgId,
-        'timestamp': timestamp,
-        'lat': lat,
-        'lon': lon,
-        'alt': alt,
-        'vel': vel,
-        'acc': acc,
-        'qTarget': qTarget,
-        'rates': rates,
-        'positionStd': positionStd,
-        'velStd': velStd,
-        'accStd': accStd,
-        'id': id,
-        'sensorCapabilities': sensorCapabilities,
+        'timeBootMs': timeBootMs,
+        'position': position,
+        'velocity': velocity,
+        'force': force,
+        'axis': axis,
       };
 
-  factory TargetAbsolute.parse(ByteData data_) {
-    if (data_.lengthInBytes < TargetAbsolute.mavlinkEncodedLength) {
-      var len = TargetAbsolute.mavlinkEncodedLength - data_.lengthInBytes;
+  factory ControlLoadingAxis.parse(ByteData data_) {
+    if (data_.lengthInBytes < ControlLoadingAxis.mavlinkEncodedLength) {
+      var len = ControlLoadingAxis.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var timestamp = data_.getUint64(0, Endian.little);
-    var lat = data_.getInt32(8, Endian.little);
-    var lon = data_.getInt32(12, Endian.little);
-    var alt = data_.getFloat32(16, Endian.little);
-    var vel = MavlinkMessage.asFloat32List(data_, 20, 3);
-    var acc = MavlinkMessage.asFloat32List(data_, 32, 3);
-    var qTarget = MavlinkMessage.asFloat32List(data_, 44, 4);
-    var rates = MavlinkMessage.asFloat32List(data_, 60, 3);
-    var positionStd = MavlinkMessage.asFloat32List(data_, 72, 2);
-    var velStd = MavlinkMessage.asFloat32List(data_, 80, 3);
-    var accStd = MavlinkMessage.asFloat32List(data_, 92, 3);
-    var id = data_.getUint8(104);
-    var sensorCapabilities = data_.getUint8(105);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var position = data_.getFloat32(4, Endian.little);
+    var velocity = data_.getFloat32(8, Endian.little);
+    var force = data_.getFloat32(12, Endian.little);
+    var axis = data_.getUint8(16);
 
-    return TargetAbsolute(
-        timestamp: timestamp,
-        lat: lat,
-        lon: lon,
-        alt: alt,
-        vel: vel,
-        acc: acc,
-        qTarget: qTarget,
-        rates: rates,
-        positionStd: positionStd,
-        velStd: velStd,
-        accStd: accStd,
-        id: id,
-        sensorCapabilities: sensorCapabilities);
+    return ControlLoadingAxis(
+        timeBootMs: timeBootMs,
+        position: position,
+        velocity: velocity,
+        force: force,
+        axis: axis);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timestamp, Endian.little);
-    data_.setInt32(8, lat, Endian.little);
-    data_.setInt32(12, lon, Endian.little);
-    data_.setFloat32(16, alt, Endian.little);
-    MavlinkMessage.setFloat32List(data_, 20, vel);
-    MavlinkMessage.setFloat32List(data_, 32, acc);
-    MavlinkMessage.setFloat32List(data_, 44, qTarget);
-    MavlinkMessage.setFloat32List(data_, 60, rates);
-    MavlinkMessage.setFloat32List(data_, 72, positionStd);
-    MavlinkMessage.setFloat32List(data_, 80, velStd);
-    MavlinkMessage.setFloat32List(data_, 92, accStd);
-    data_.setUint8(104, id);
-    data_.setUint8(105, sensorCapabilities);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setFloat32(4, position, Endian.little);
+    data_.setFloat32(8, velocity, Endian.little);
+    data_.setFloat32(12, force, Endian.little);
+    data_.setUint8(16, axis);
     return data_;
   }
 }
 
-/// The location of a target measured by MAV's onboard sensors.
+/// State report for motion platform used for moving the cockpit with the pilot for motion cueing. This is the primary message for MARSH_TYPE_MOTION_PLATFORM.
 ///
-/// TARGET_RELATIVE
-class TargetRelative implements MavlinkMessage {
-  static const int msgId = 511;
+/// MOTION_PLATFORM_STATE
+class MotionPlatformState implements MavlinkMessage {
+  static const int msgId = 52502;
 
-  static const int crcExtra = 28;
+  static const int crcExtra = 88;
 
-  static const int mavlinkEncodedLength = 71;
+  static const int mavlinkEncodedLength = 78;
 
   @override
   int get mavlinkMessageId => msgId;
@@ -51211,16 +49606,16 @@ class TargetRelative implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => crcExtra;
 
-  /// Timestamp (UNIX epoch time)
+  /// Timestamp (time since system boot).
   ///
-  /// MAVLink type: uint64_t
+  /// MAVLink type: uint32_t
   ///
-  /// units: us
+  /// units: ms
   ///
-  /// timestamp
-  final uint64_t timestamp;
+  /// time_boot_ms
+  final uint32_t timeBootMs;
 
-  /// X Position of the target in TARGET_OBS_FRAME
+  /// X axis (surge) position, positive forward.
   ///
   /// MAVLink type: float
   ///
@@ -51229,7 +49624,7 @@ class TargetRelative implements MavlinkMessage {
   /// x
   final float x;
 
-  /// Y Position of the target in TARGET_OBS_FRAME
+  /// Y axis (sway) position, positive right.
   ///
   /// MAVLink type: float
   ///
@@ -51238,7 +49633,7 @@ class TargetRelative implements MavlinkMessage {
   /// y
   final float y;
 
-  /// Z Position of the target in TARGET_OBS_FRAME
+  /// Z axis (heave) position, positive down.
   ///
   /// MAVLink type: float
   ///
@@ -51247,181 +49642,341 @@ class TargetRelative implements MavlinkMessage {
   /// z
   final float z;
 
-  /// Standard deviation of the target's position in TARGET_OBS_FRAME
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m
-  ///
-  /// pos_std
-  final List<float> posStd;
-
-  /// Standard deviation of the target's orientation in TARGET_OBS_FRAME
+  /// Roll position, positive right.
   ///
   /// MAVLink type: float
   ///
   /// units: rad
   ///
-  /// yaw_std
-  final float yawStd;
+  /// roll
+  final float roll;
 
-  /// Quaternion of the target's orientation from the target's frame to the TARGET_OBS_FRAME (w, x, y, z order, zero-rotation is 1, 0, 0, 0)
+  /// Pitch position, positive nose up.
   ///
-  /// MAVLink type: float[4]
+  /// MAVLink type: float
   ///
-  /// q_target
-  final List<float> qTarget;
+  /// units: rad
+  ///
+  /// pitch
+  final float pitch;
 
-  /// Quaternion of the sensor's orientation from TARGET_OBS_FRAME to vehicle-carried NED. (Ignored if set to (0,0,0,0)) (w, x, y, z order, zero-rotation is 1, 0, 0, 0)
+  /// Yaw position, positive right.
   ///
-  /// MAVLink type: float[4]
+  /// MAVLink type: float
   ///
-  /// q_sensor
-  final List<float> qSensor;
+  /// units: rad
+  ///
+  /// yaw
+  final float yaw;
 
-  /// The ID of the target if multiple targets are present
+  /// X axis (surge) velocity, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s
+  ///
+  /// vel_x
+  final float velX;
+
+  /// Y axis (sway) velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s
+  ///
+  /// vel_y
+  final float velY;
+
+  /// Z axis (heave) velocity, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s
+  ///
+  /// vel_z
+  final float velZ;
+
+  /// Roll velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_roll
+  final float velRoll;
+
+  /// Pitch velocity, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_pitch
+  final float velPitch;
+
+  /// Yaw velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_yaw
+  final float velYaw;
+
+  /// X axis (surge) acceleration, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_x
+  final float accX;
+
+  /// Y axis (sway) acceleration, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_y
+  final float accY;
+
+  /// Z axis (heave) acceleration, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_z
+  final float accZ;
+
+  /// Roll acceleration, positive right. Unit rad/s/s, currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// acc_roll
+  final float accRoll;
+
+  /// Pitch acceleration, positive nose up. Unit rad/s/s, currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// acc_pitch
+  final float accPitch;
+
+  /// Yaw acceleration, positive right. Unit rad/s/s, currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// acc_yaw
+  final float accYaw;
+
+  /// Generic system health (error and warning) status.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// id
-  final uint8_t id;
+  /// enum: [MotionPlatformHealth]
+  ///
+  /// health
+  final MotionPlatformHealth health;
 
-  /// Coordinate frame used for following fields.
+  /// Generic system operating mode.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// enum: [TargetObsFrame]
+  /// enum: [MotionPlatformMode]
   ///
-  /// frame
-  final TargetObsFrame frame;
+  /// mode
+  final MotionPlatformMode mode;
 
-  /// Type of target
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [LandingTargetType]
-  ///
-  /// type
-  final LandingTargetType type;
-
-  TargetRelative({
-    required this.timestamp,
+  MotionPlatformState({
+    required this.timeBootMs,
     required this.x,
     required this.y,
     required this.z,
-    required this.posStd,
-    required this.yawStd,
-    required this.qTarget,
-    required this.qSensor,
-    required this.id,
-    required this.frame,
-    required this.type,
+    required this.roll,
+    required this.pitch,
+    required this.yaw,
+    required this.velX,
+    required this.velY,
+    required this.velZ,
+    required this.velRoll,
+    required this.velPitch,
+    required this.velYaw,
+    required this.accX,
+    required this.accY,
+    required this.accZ,
+    required this.accRoll,
+    required this.accPitch,
+    required this.accYaw,
+    required this.health,
+    required this.mode,
   });
 
-  TargetRelative copyWith({
-    uint64_t? timestamp,
+  MotionPlatformState copyWith({
+    uint32_t? timeBootMs,
     float? x,
     float? y,
     float? z,
-    List<float>? posStd,
-    float? yawStd,
-    List<float>? qTarget,
-    List<float>? qSensor,
-    uint8_t? id,
-    TargetObsFrame? frame,
-    LandingTargetType? type,
+    float? roll,
+    float? pitch,
+    float? yaw,
+    float? velX,
+    float? velY,
+    float? velZ,
+    float? velRoll,
+    float? velPitch,
+    float? velYaw,
+    float? accX,
+    float? accY,
+    float? accZ,
+    float? accRoll,
+    float? accPitch,
+    float? accYaw,
+    MotionPlatformHealth? health,
+    MotionPlatformMode? mode,
   }) {
-    return TargetRelative(
-      timestamp: timestamp ?? this.timestamp,
+    return MotionPlatformState(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
       x: x ?? this.x,
       y: y ?? this.y,
       z: z ?? this.z,
-      posStd: posStd ?? this.posStd,
-      yawStd: yawStd ?? this.yawStd,
-      qTarget: qTarget ?? this.qTarget,
-      qSensor: qSensor ?? this.qSensor,
-      id: id ?? this.id,
-      frame: frame ?? this.frame,
-      type: type ?? this.type,
+      roll: roll ?? this.roll,
+      pitch: pitch ?? this.pitch,
+      yaw: yaw ?? this.yaw,
+      velX: velX ?? this.velX,
+      velY: velY ?? this.velY,
+      velZ: velZ ?? this.velZ,
+      velRoll: velRoll ?? this.velRoll,
+      velPitch: velPitch ?? this.velPitch,
+      velYaw: velYaw ?? this.velYaw,
+      accX: accX ?? this.accX,
+      accY: accY ?? this.accY,
+      accZ: accZ ?? this.accZ,
+      accRoll: accRoll ?? this.accRoll,
+      accPitch: accPitch ?? this.accPitch,
+      accYaw: accYaw ?? this.accYaw,
+      health: health ?? this.health,
+      mode: mode ?? this.mode,
     );
   }
 
   @override
   Map<String, dynamic> toJson() => {
         'msgId': msgId,
-        'timestamp': timestamp,
+        'timeBootMs': timeBootMs,
         'x': x,
         'y': y,
         'z': z,
-        'posStd': posStd,
-        'yawStd': yawStd,
-        'qTarget': qTarget,
-        'qSensor': qSensor,
-        'id': id,
-        'frame': frame,
-        'type': type,
+        'roll': roll,
+        'pitch': pitch,
+        'yaw': yaw,
+        'velX': velX,
+        'velY': velY,
+        'velZ': velZ,
+        'velRoll': velRoll,
+        'velPitch': velPitch,
+        'velYaw': velYaw,
+        'accX': accX,
+        'accY': accY,
+        'accZ': accZ,
+        'accRoll': accRoll,
+        'accPitch': accPitch,
+        'accYaw': accYaw,
+        'health': health,
+        'mode': mode,
       };
 
-  factory TargetRelative.parse(ByteData data_) {
-    if (data_.lengthInBytes < TargetRelative.mavlinkEncodedLength) {
-      var len = TargetRelative.mavlinkEncodedLength - data_.lengthInBytes;
+  factory MotionPlatformState.parse(ByteData data_) {
+    if (data_.lengthInBytes < MotionPlatformState.mavlinkEncodedLength) {
+      var len = MotionPlatformState.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var timestamp = data_.getUint64(0, Endian.little);
-    var x = data_.getFloat32(8, Endian.little);
-    var y = data_.getFloat32(12, Endian.little);
-    var z = data_.getFloat32(16, Endian.little);
-    var posStd = MavlinkMessage.asFloat32List(data_, 20, 3);
-    var yawStd = data_.getFloat32(32, Endian.little);
-    var qTarget = MavlinkMessage.asFloat32List(data_, 36, 4);
-    var qSensor = MavlinkMessage.asFloat32List(data_, 52, 4);
-    var id = data_.getUint8(68);
-    var frame = data_.getUint8(69);
-    var type = data_.getUint8(70);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var x = data_.getFloat32(4, Endian.little);
+    var y = data_.getFloat32(8, Endian.little);
+    var z = data_.getFloat32(12, Endian.little);
+    var roll = data_.getFloat32(16, Endian.little);
+    var pitch = data_.getFloat32(20, Endian.little);
+    var yaw = data_.getFloat32(24, Endian.little);
+    var velX = data_.getFloat32(28, Endian.little);
+    var velY = data_.getFloat32(32, Endian.little);
+    var velZ = data_.getFloat32(36, Endian.little);
+    var velRoll = data_.getFloat32(40, Endian.little);
+    var velPitch = data_.getFloat32(44, Endian.little);
+    var velYaw = data_.getFloat32(48, Endian.little);
+    var accX = data_.getFloat32(52, Endian.little);
+    var accY = data_.getFloat32(56, Endian.little);
+    var accZ = data_.getFloat32(60, Endian.little);
+    var accRoll = data_.getFloat32(64, Endian.little);
+    var accPitch = data_.getFloat32(68, Endian.little);
+    var accYaw = data_.getFloat32(72, Endian.little);
+    var health = data_.getUint8(76);
+    var mode = data_.getUint8(77);
 
-    return TargetRelative(
-        timestamp: timestamp,
+    return MotionPlatformState(
+        timeBootMs: timeBootMs,
         x: x,
         y: y,
         z: z,
-        posStd: posStd,
-        yawStd: yawStd,
-        qTarget: qTarget,
-        qSensor: qSensor,
-        id: id,
-        frame: frame,
-        type: type);
+        roll: roll,
+        pitch: pitch,
+        yaw: yaw,
+        velX: velX,
+        velY: velY,
+        velZ: velZ,
+        velRoll: velRoll,
+        velPitch: velPitch,
+        velYaw: velYaw,
+        accX: accX,
+        accY: accY,
+        accZ: accZ,
+        accRoll: accRoll,
+        accPitch: accPitch,
+        accYaw: accYaw,
+        health: health,
+        mode: mode);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timestamp, Endian.little);
-    data_.setFloat32(8, x, Endian.little);
-    data_.setFloat32(12, y, Endian.little);
-    data_.setFloat32(16, z, Endian.little);
-    MavlinkMessage.setFloat32List(data_, 20, posStd);
-    data_.setFloat32(32, yawStd, Endian.little);
-    MavlinkMessage.setFloat32List(data_, 36, qTarget);
-    MavlinkMessage.setFloat32List(data_, 52, qSensor);
-    data_.setUint8(68, id);
-    data_.setUint8(69, frame);
-    data_.setUint8(70, type);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setFloat32(4, x, Endian.little);
+    data_.setFloat32(8, y, Endian.little);
+    data_.setFloat32(12, z, Endian.little);
+    data_.setFloat32(16, roll, Endian.little);
+    data_.setFloat32(20, pitch, Endian.little);
+    data_.setFloat32(24, yaw, Endian.little);
+    data_.setFloat32(28, velX, Endian.little);
+    data_.setFloat32(32, velY, Endian.little);
+    data_.setFloat32(36, velZ, Endian.little);
+    data_.setFloat32(40, velRoll, Endian.little);
+    data_.setFloat32(44, velPitch, Endian.little);
+    data_.setFloat32(48, velYaw, Endian.little);
+    data_.setFloat32(52, accX, Endian.little);
+    data_.setFloat32(56, accY, Endian.little);
+    data_.setFloat32(60, accZ, Endian.little);
+    data_.setFloat32(64, accRoll, Endian.little);
+    data_.setFloat32(68, accPitch, Endian.little);
+    data_.setFloat32(72, accYaw, Endian.little);
+    data_.setUint8(76, health);
+    data_.setUint8(77, mode);
     return data_;
   }
 }
 
-/// Information about GCS in control of this MAV. This should be broadcast at low rate (nominally 1 Hz) and emitted when ownership or takeover status change. Control over MAV is requested using MAV_CMD_REQUEST_OPERATOR_CONTROL.
+/// State report specific for eMotion Motion System by Bosch Rexroth B.V. Values applicable to motion platforms in general are sent in MOTION_PLATFORM_STATE with the same timestamp. Actuators are numbered in a clockwise direction when looking from above, starting from the front right. Actuator position is 0 when actuator is in mid-stroke.
 ///
-/// CONTROL_STATUS
-class ControlStatus implements MavlinkMessage {
-  static const int msgId = 512;
+/// REXROTH_MOTION_PLATFORM
+class RexrothMotionPlatform implements MavlinkMessage {
+  static const int msgId = 52503;
 
-  static const int crcExtra = 184;
+  static const int crcExtra = 96;
 
-  static const int mavlinkEncodedLength = 2;
+  static const int mavlinkEncodedLength = 85;
 
   @override
   int get mavlinkMessageId => msgId;
@@ -51429,85 +49984,395 @@ class ControlStatus implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => crcExtra;
 
-  /// System ID of GCS MAVLink component in control (0: no GCS in control).
+  /// Timestamp (time since system boot).
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// units: ms
+  ///
+  /// time_boot_ms
+  final uint32_t timeBootMs;
+
+  /// Number of message as sent by the Motion System.
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// frame_count
+  final uint32_t frameCount;
+
+  /// Motion Status variable as sent by the system.
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// motion_status
+  final uint32_t motionStatus;
+
+  /// Current actuator 1 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator1
+  final float actuator1;
+
+  /// Current actuator 2 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator2
+  final float actuator2;
+
+  /// Current actuator 3 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator3
+  final float actuator3;
+
+  /// Current actuator 4 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator4
+  final float actuator4;
+
+  /// Current actuator 5 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator5
+  final float actuator5;
+
+  /// Current actuator 6 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator6
+  final float actuator6;
+
+  /// X axis (surge) platform setpoint, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// platform_setpoint_x
+  final float platformSetpointX;
+
+  /// Y axis (sway) platform setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// platform_setpoint_y
+  final float platformSetpointY;
+
+  /// Z axis (heave) platform setpoint, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// platform_setpoint_z
+  final float platformSetpointZ;
+
+  /// Roll platform setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// platform_setpoint_roll
+  final float platformSetpointRoll;
+
+  /// Pitch platform setpoint, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// platform_setpoint_pitch
+  final float platformSetpointPitch;
+
+  /// Yaw platform setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// platform_setpoint_yaw
+  final float platformSetpointYaw;
+
+  /// X axis (surge) special effect setpoint, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// effect_setpoint_x
+  final float effectSetpointX;
+
+  /// Y axis (sway) special effect setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// effect_setpoint_y
+  final float effectSetpointY;
+
+  /// Z axis (heave) special effect setpoint, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// effect_setpoint_z
+  final float effectSetpointZ;
+
+  /// Roll special effect setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// effect_setpoint_roll
+  final float effectSetpointRoll;
+
+  /// Pitch special effect setpoint, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// effect_setpoint_pitch
+  final float effectSetpointPitch;
+
+  /// Yaw special effect setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// effect_setpoint_yaw
+  final float effectSetpointYaw;
+
+  /// Error code extracted from motion status.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// sysid_in_control
-  final uint8_t sysidInControl;
+  /// error_code
+  final uint8_t errorCode;
 
-  /// Control status. For example, whether takeover is allowed, and whether this message instance defines the default controlling GCS for the whole system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GcsControlStatusFlags]
-  ///
-  /// flags
-  final GcsControlStatusFlags flags;
-
-  ControlStatus({
-    required this.sysidInControl,
-    required this.flags,
+  RexrothMotionPlatform({
+    required this.timeBootMs,
+    required this.frameCount,
+    required this.motionStatus,
+    required this.actuator1,
+    required this.actuator2,
+    required this.actuator3,
+    required this.actuator4,
+    required this.actuator5,
+    required this.actuator6,
+    required this.platformSetpointX,
+    required this.platformSetpointY,
+    required this.platformSetpointZ,
+    required this.platformSetpointRoll,
+    required this.platformSetpointPitch,
+    required this.platformSetpointYaw,
+    required this.effectSetpointX,
+    required this.effectSetpointY,
+    required this.effectSetpointZ,
+    required this.effectSetpointRoll,
+    required this.effectSetpointPitch,
+    required this.effectSetpointYaw,
+    required this.errorCode,
   });
 
-  ControlStatus copyWith({
-    uint8_t? sysidInControl,
-    GcsControlStatusFlags? flags,
+  RexrothMotionPlatform copyWith({
+    uint32_t? timeBootMs,
+    uint32_t? frameCount,
+    uint32_t? motionStatus,
+    float? actuator1,
+    float? actuator2,
+    float? actuator3,
+    float? actuator4,
+    float? actuator5,
+    float? actuator6,
+    float? platformSetpointX,
+    float? platformSetpointY,
+    float? platformSetpointZ,
+    float? platformSetpointRoll,
+    float? platformSetpointPitch,
+    float? platformSetpointYaw,
+    float? effectSetpointX,
+    float? effectSetpointY,
+    float? effectSetpointZ,
+    float? effectSetpointRoll,
+    float? effectSetpointPitch,
+    float? effectSetpointYaw,
+    uint8_t? errorCode,
   }) {
-    return ControlStatus(
-      sysidInControl: sysidInControl ?? this.sysidInControl,
-      flags: flags ?? this.flags,
+    return RexrothMotionPlatform(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      frameCount: frameCount ?? this.frameCount,
+      motionStatus: motionStatus ?? this.motionStatus,
+      actuator1: actuator1 ?? this.actuator1,
+      actuator2: actuator2 ?? this.actuator2,
+      actuator3: actuator3 ?? this.actuator3,
+      actuator4: actuator4 ?? this.actuator4,
+      actuator5: actuator5 ?? this.actuator5,
+      actuator6: actuator6 ?? this.actuator6,
+      platformSetpointX: platformSetpointX ?? this.platformSetpointX,
+      platformSetpointY: platformSetpointY ?? this.platformSetpointY,
+      platformSetpointZ: platformSetpointZ ?? this.platformSetpointZ,
+      platformSetpointRoll: platformSetpointRoll ?? this.platformSetpointRoll,
+      platformSetpointPitch:
+          platformSetpointPitch ?? this.platformSetpointPitch,
+      platformSetpointYaw: platformSetpointYaw ?? this.platformSetpointYaw,
+      effectSetpointX: effectSetpointX ?? this.effectSetpointX,
+      effectSetpointY: effectSetpointY ?? this.effectSetpointY,
+      effectSetpointZ: effectSetpointZ ?? this.effectSetpointZ,
+      effectSetpointRoll: effectSetpointRoll ?? this.effectSetpointRoll,
+      effectSetpointPitch: effectSetpointPitch ?? this.effectSetpointPitch,
+      effectSetpointYaw: effectSetpointYaw ?? this.effectSetpointYaw,
+      errorCode: errorCode ?? this.errorCode,
     );
   }
 
   @override
   Map<String, dynamic> toJson() => {
         'msgId': msgId,
-        'sysidInControl': sysidInControl,
-        'flags': flags,
+        'timeBootMs': timeBootMs,
+        'frameCount': frameCount,
+        'motionStatus': motionStatus,
+        'actuator1': actuator1,
+        'actuator2': actuator2,
+        'actuator3': actuator3,
+        'actuator4': actuator4,
+        'actuator5': actuator5,
+        'actuator6': actuator6,
+        'platformSetpointX': platformSetpointX,
+        'platformSetpointY': platformSetpointY,
+        'platformSetpointZ': platformSetpointZ,
+        'platformSetpointRoll': platformSetpointRoll,
+        'platformSetpointPitch': platformSetpointPitch,
+        'platformSetpointYaw': platformSetpointYaw,
+        'effectSetpointX': effectSetpointX,
+        'effectSetpointY': effectSetpointY,
+        'effectSetpointZ': effectSetpointZ,
+        'effectSetpointRoll': effectSetpointRoll,
+        'effectSetpointPitch': effectSetpointPitch,
+        'effectSetpointYaw': effectSetpointYaw,
+        'errorCode': errorCode,
       };
 
-  factory ControlStatus.parse(ByteData data_) {
-    if (data_.lengthInBytes < ControlStatus.mavlinkEncodedLength) {
-      var len = ControlStatus.mavlinkEncodedLength - data_.lengthInBytes;
+  factory RexrothMotionPlatform.parse(ByteData data_) {
+    if (data_.lengthInBytes < RexrothMotionPlatform.mavlinkEncodedLength) {
+      var len =
+          RexrothMotionPlatform.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var sysidInControl = data_.getUint8(0);
-    var flags = data_.getUint8(1);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var frameCount = data_.getUint32(4, Endian.little);
+    var motionStatus = data_.getUint32(8, Endian.little);
+    var actuator1 = data_.getFloat32(12, Endian.little);
+    var actuator2 = data_.getFloat32(16, Endian.little);
+    var actuator3 = data_.getFloat32(20, Endian.little);
+    var actuator4 = data_.getFloat32(24, Endian.little);
+    var actuator5 = data_.getFloat32(28, Endian.little);
+    var actuator6 = data_.getFloat32(32, Endian.little);
+    var platformSetpointX = data_.getFloat32(36, Endian.little);
+    var platformSetpointY = data_.getFloat32(40, Endian.little);
+    var platformSetpointZ = data_.getFloat32(44, Endian.little);
+    var platformSetpointRoll = data_.getFloat32(48, Endian.little);
+    var platformSetpointPitch = data_.getFloat32(52, Endian.little);
+    var platformSetpointYaw = data_.getFloat32(56, Endian.little);
+    var effectSetpointX = data_.getFloat32(60, Endian.little);
+    var effectSetpointY = data_.getFloat32(64, Endian.little);
+    var effectSetpointZ = data_.getFloat32(68, Endian.little);
+    var effectSetpointRoll = data_.getFloat32(72, Endian.little);
+    var effectSetpointPitch = data_.getFloat32(76, Endian.little);
+    var effectSetpointYaw = data_.getFloat32(80, Endian.little);
+    var errorCode = data_.getUint8(84);
 
-    return ControlStatus(sysidInControl: sysidInControl, flags: flags);
+    return RexrothMotionPlatform(
+        timeBootMs: timeBootMs,
+        frameCount: frameCount,
+        motionStatus: motionStatus,
+        actuator1: actuator1,
+        actuator2: actuator2,
+        actuator3: actuator3,
+        actuator4: actuator4,
+        actuator5: actuator5,
+        actuator6: actuator6,
+        platformSetpointX: platformSetpointX,
+        platformSetpointY: platformSetpointY,
+        platformSetpointZ: platformSetpointZ,
+        platformSetpointRoll: platformSetpointRoll,
+        platformSetpointPitch: platformSetpointPitch,
+        platformSetpointYaw: platformSetpointYaw,
+        effectSetpointX: effectSetpointX,
+        effectSetpointY: effectSetpointY,
+        effectSetpointZ: effectSetpointZ,
+        effectSetpointRoll: effectSetpointRoll,
+        effectSetpointPitch: effectSetpointPitch,
+        effectSetpointYaw: effectSetpointYaw,
+        errorCode: errorCode);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint8(0, sysidInControl);
-    data_.setUint8(1, flags);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setUint32(4, frameCount, Endian.little);
+    data_.setUint32(8, motionStatus, Endian.little);
+    data_.setFloat32(12, actuator1, Endian.little);
+    data_.setFloat32(16, actuator2, Endian.little);
+    data_.setFloat32(20, actuator3, Endian.little);
+    data_.setFloat32(24, actuator4, Endian.little);
+    data_.setFloat32(28, actuator5, Endian.little);
+    data_.setFloat32(32, actuator6, Endian.little);
+    data_.setFloat32(36, platformSetpointX, Endian.little);
+    data_.setFloat32(40, platformSetpointY, Endian.little);
+    data_.setFloat32(44, platformSetpointZ, Endian.little);
+    data_.setFloat32(48, platformSetpointRoll, Endian.little);
+    data_.setFloat32(52, platformSetpointPitch, Endian.little);
+    data_.setFloat32(56, platformSetpointYaw, Endian.little);
+    data_.setFloat32(60, effectSetpointX, Endian.little);
+    data_.setFloat32(64, effectSetpointY, Endian.little);
+    data_.setFloat32(68, effectSetpointZ, Endian.little);
+    data_.setFloat32(72, effectSetpointRoll, Endian.little);
+    data_.setFloat32(76, effectSetpointPitch, Endian.little);
+    data_.setFloat32(80, effectSetpointYaw, Endian.little);
+    data_.setUint8(84, errorCode);
     return data_;
   }
 }
 
-/// ESC EEPROM data message for reading and writing ESC configuration.
-/// Supports multiple ESC firmware types including AM32, Bluejay, and BLHeli32.
-/// ESC data is read by sending the MAV_CMD_REQUEST_MESSAGE with `param1=292` and `param2=esc_index`, where esc_index is the zero-indexed ESC number for the corresponding motor, and 255 is used to request data for all ESC.
-/// The message can be sent to set the ESC value.
-/// For write requests, a bitmask allows selective writing of specific bytes to avoid corrupting unchanged values.
+/// These values are an extra cue that should be added to accelerations and rotations etc. resulting from aircraft state, with the resulting cue being the sum of the latest aircraft and extra values. An example use case would be a cockpit shaker.
 ///
-/// The data format is opaque to the autopilot.
-/// A GCS is required to understand the format in order to create an appropriate UI for display and setting configuration values, and to inform users when the ESC uses an unsupported data format.
-/// Note that for AM32 EEPROMs the data layout is defined in: https://github.com/am32-firmware/AM32/blob/main/Inc/eeprom.h (the second byte in the structure is the eeprom_version).
-/// The firmware field indicates which ESC firmware is in use, allowing the GCS to interpret the data correctly.
-///
-///
-/// ESC_EEPROM
-class EscEeprom implements MavlinkMessage {
-  static const int msgId = 292;
+/// MOTION_CUE_EXTRA
+class MotionCueExtra implements MavlinkMessage {
+  static const int msgId = 52504;
 
-  static const int crcExtra = 227;
+  static const int crcExtra = 177;
 
-  static const int mavlinkEncodedLength = 223;
+  static const int mavlinkEncodedLength = 28;
 
   @override
   int get mavlinkMessageId => msgId;
@@ -51515,168 +50380,390 @@ class EscEeprom implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => crcExtra;
 
-  /// Bitmask indicating which bytes in the data array should be written. Each bit corresponds to a byte index in the data array (bit 0 of write_mask[0] = data[0], bit 31 of write_mask[0] = data[31], bit 0 of write_mask[1] = data[32], etc.). Set bits indicate bytes to write, cleared bits indicate bytes to skip. This allows precise updates of individual parameters without overwriting the entire EEPROM.
+  /// Timestamp (time since system boot).
   ///
-  /// MAVLink type: uint32_t[6]
+  /// MAVLink type: uint32_t
   ///
-  /// write_mask
-  final List<int32_t> writeMask;
+  /// units: ms
+  ///
+  /// time_boot_ms
+  final uint32_t timeBootMs;
 
-  /// System ID (ID of target system, normally flight controller).
+  /// Roll velocity, positive right.
   ///
-  /// MAVLink type: uint8_t
+  /// MAVLink type: float
   ///
-  /// target_system
-  final uint8_t targetSystem;
+  /// units: rad/s
+  ///
+  /// vel_roll
+  final float velRoll;
 
-  /// Component ID (normally 0 for broadcast).
+  /// Pitch velocity, positive nose up.
   ///
-  /// MAVLink type: uint8_t
+  /// MAVLink type: float
   ///
-  /// target_component
-  final uint8_t targetComponent;
+  /// units: rad/s
+  ///
+  /// vel_pitch
+  final float velPitch;
 
-  /// ESC firmware type.
+  /// Yaw velocity, positive right.
   ///
-  /// MAVLink type: uint8_t
+  /// MAVLink type: float
   ///
-  /// enum: [EscFirmware]
+  /// units: rad/s
   ///
-  /// firmware
-  final EscFirmware firmware;
+  /// vel_yaw
+  final float velYaw;
 
-  /// Zero-indexed sequence number of this message when multiple messages are required to transfer the complete EEPROM data. The first message has index 0. For single-message transfers, set to 0.
+  /// X axis (surge) acceleration, positive forward.
   ///
-  /// MAVLink type: uint8_t
+  /// MAVLink type: float
   ///
-  /// msg_index
-  final uint8_t msgIndex;
+  /// units: m/s/s
+  ///
+  /// acc_x
+  final float accX;
 
-  /// Total number of messages required to transfer the complete EEPROM data. For single-message transfers, set to 1. Receivers should collect all messages from index 0 to msg_count-1 before reconstructing the complete data.
+  /// Y axis (sway) acceleration, positive right.
   ///
-  /// MAVLink type: uint8_t
+  /// MAVLink type: float
   ///
-  /// msg_count
-  final uint8_t msgCount;
+  /// units: m/s/s
+  ///
+  /// acc_y
+  final float accY;
 
-  /// Index of the ESC (0 = ESC1, 1 = ESC2, etc.).
+  /// Z axis (heave) acceleration, positive down.
   ///
-  /// MAVLink type: uint8_t
+  /// MAVLink type: float
   ///
-  /// esc_index
-  final uint8_t escIndex;
+  /// units: m/s/s
+  ///
+  /// acc_z
+  final float accZ;
 
-  /// Number of valid bytes in data array.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// length
-  final uint8_t length;
-
-  /// Raw ESC EEPROM data. Unused bytes should be set to zero.
-  ///
-  /// MAVLink type: uint8_t[192]
-  ///
-  /// data
-  final List<int8_t> data;
-
-  EscEeprom({
-    required this.writeMask,
-    required this.targetSystem,
-    required this.targetComponent,
-    required this.firmware,
-    required this.msgIndex,
-    required this.msgCount,
-    required this.escIndex,
-    required this.length,
-    required this.data,
+  MotionCueExtra({
+    required this.timeBootMs,
+    required this.velRoll,
+    required this.velPitch,
+    required this.velYaw,
+    required this.accX,
+    required this.accY,
+    required this.accZ,
   });
 
-  EscEeprom copyWith({
-    List<int32_t>? writeMask,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
-    EscFirmware? firmware,
-    uint8_t? msgIndex,
-    uint8_t? msgCount,
-    uint8_t? escIndex,
-    uint8_t? length,
-    List<int8_t>? data,
+  MotionCueExtra copyWith({
+    uint32_t? timeBootMs,
+    float? velRoll,
+    float? velPitch,
+    float? velYaw,
+    float? accX,
+    float? accY,
+    float? accZ,
   }) {
-    return EscEeprom(
-      writeMask: writeMask ?? this.writeMask,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
-      firmware: firmware ?? this.firmware,
-      msgIndex: msgIndex ?? this.msgIndex,
-      msgCount: msgCount ?? this.msgCount,
-      escIndex: escIndex ?? this.escIndex,
-      length: length ?? this.length,
-      data: data ?? this.data,
+    return MotionCueExtra(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      velRoll: velRoll ?? this.velRoll,
+      velPitch: velPitch ?? this.velPitch,
+      velYaw: velYaw ?? this.velYaw,
+      accX: accX ?? this.accX,
+      accY: accY ?? this.accY,
+      accZ: accZ ?? this.accZ,
     );
   }
 
   @override
   Map<String, dynamic> toJson() => {
         'msgId': msgId,
-        'writeMask': writeMask,
-        'targetSystem': targetSystem,
-        'targetComponent': targetComponent,
-        'firmware': firmware,
-        'msgIndex': msgIndex,
-        'msgCount': msgCount,
-        'escIndex': escIndex,
-        'length': length,
-        'data': data,
+        'timeBootMs': timeBootMs,
+        'velRoll': velRoll,
+        'velPitch': velPitch,
+        'velYaw': velYaw,
+        'accX': accX,
+        'accY': accY,
+        'accZ': accZ,
       };
 
-  factory EscEeprom.parse(ByteData data_) {
-    if (data_.lengthInBytes < EscEeprom.mavlinkEncodedLength) {
-      var len = EscEeprom.mavlinkEncodedLength - data_.lengthInBytes;
+  factory MotionCueExtra.parse(ByteData data_) {
+    if (data_.lengthInBytes < MotionCueExtra.mavlinkEncodedLength) {
+      var len = MotionCueExtra.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var writeMask = MavlinkMessage.asUint32List(data_, 0, 6);
-    var targetSystem = data_.getUint8(24);
-    var targetComponent = data_.getUint8(25);
-    var firmware = data_.getUint8(26);
-    var msgIndex = data_.getUint8(27);
-    var msgCount = data_.getUint8(28);
-    var escIndex = data_.getUint8(29);
-    var length = data_.getUint8(30);
-    var data = MavlinkMessage.asUint8List(data_, 31, 192);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var velRoll = data_.getFloat32(4, Endian.little);
+    var velPitch = data_.getFloat32(8, Endian.little);
+    var velYaw = data_.getFloat32(12, Endian.little);
+    var accX = data_.getFloat32(16, Endian.little);
+    var accY = data_.getFloat32(20, Endian.little);
+    var accZ = data_.getFloat32(24, Endian.little);
 
-    return EscEeprom(
-        writeMask: writeMask,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent,
-        firmware: firmware,
-        msgIndex: msgIndex,
-        msgCount: msgCount,
-        escIndex: escIndex,
-        length: length,
-        data: data);
+    return MotionCueExtra(
+        timeBootMs: timeBootMs,
+        velRoll: velRoll,
+        velPitch: velPitch,
+        velYaw: velYaw,
+        accX: accX,
+        accY: accY,
+        accZ: accZ);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    MavlinkMessage.setUint32List(data_, 0, writeMask);
-    data_.setUint8(24, targetSystem);
-    data_.setUint8(25, targetComponent);
-    data_.setUint8(26, firmware);
-    data_.setUint8(27, msgIndex);
-    data_.setUint8(28, msgCount);
-    data_.setUint8(29, escIndex);
-    data_.setUint8(30, length);
-    MavlinkMessage.setUint8List(data_, 31, data);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setFloat32(4, velRoll, Endian.little);
+    data_.setFloat32(8, velPitch, Endian.little);
+    data_.setFloat32(12, velYaw, Endian.little);
+    data_.setFloat32(16, accX, Endian.little);
+    data_.setFloat32(20, accY, Endian.little);
+    data_.setFloat32(24, accZ, Endian.little);
     return data_;
   }
 }
 
-class MavlinkDialectDevelopment implements MavlinkDialect {
-  static const int mavlinkVersion = 0;
+/// Data for tracking of pilot eye gaze. This is the primary message for MARSH_TYPE_EYE_TRACKER.
+///
+/// EYE_TRACKING_DATA
+class EyeTrackingData implements MavlinkMessage {
+  static const int msgId = 52505;
+
+  static const int crcExtra = 215;
+
+  static const int mavlinkEncodedLength = 50;
+
+  @override
+  int get mavlinkMessageId => msgId;
+
+  @override
+  int get mavlinkCrcExtra => crcExtra;
+
+  /// Timestamp (time since system boot).
+  ///
+  /// MAVLink type: uint64_t
+  ///
+  /// units: us
+  ///
+  /// time_usec
+  final uint64_t timeUsec;
+
+  /// X axis of gaze origin point, NaN if unknown. The reference system depends on specific application.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// gaze_origin_x
+  final float gazeOriginX;
+
+  /// Y axis of gaze origin point, NaN if unknown. The reference system depends on specific application.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// gaze_origin_y
+  final float gazeOriginY;
+
+  /// Z axis of gaze origin point, NaN if unknown. The reference system depends on specific application.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// gaze_origin_z
+  final float gazeOriginZ;
+
+  /// X axis of gaze direction vector, expected to be normalized to unit magnitude, NaN if unknown. The reference system should match origin point.
+  ///
+  /// MAVLink type: float
+  ///
+  /// gaze_direction_x
+  final float gazeDirectionX;
+
+  /// Y axis of gaze direction vector, expected to be normalized to unit magnitude, NaN if unknown. The reference system should match origin point.
+  ///
+  /// MAVLink type: float
+  ///
+  /// gaze_direction_y
+  final float gazeDirectionY;
+
+  /// Z axis of gaze direction vector, expected to be normalized to unit magnitude, NaN if unknown. The reference system should match origin point.
+  ///
+  /// MAVLink type: float
+  ///
+  /// gaze_direction_z
+  final float gazeDirectionZ;
+
+  /// Gaze focal point on video feed x value (normalized 0..1, 0 is left, 1 is right), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// video_gaze_x
+  final float videoGazeX;
+
+  /// Gaze focal point on video feed y value (normalized 0..1, 0 is top, 1 is bottom), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// video_gaze_y
+  final float videoGazeY;
+
+  /// Gaze focal point on surface x value (normalized 0..1, 0 is left, 1 is right), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// surface_gaze_x
+  final float surfaceGazeX;
+
+  /// Gaze focal point on surface y value (normalized 0..1, 0 is top, 1 is bottom), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// surface_gaze_y
+  final float surfaceGazeY;
+
+  /// Sensor ID, used for identifying the device and/or person tracked. Set to zero if unknown/unused.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// sensor_id
+  final uint8_t sensorId;
+
+  /// Identifier of surface for 2D gaze point, or an identified region when surface point is invalid. Set to zero if unknown/unused.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// surface_id
+  final uint8_t surfaceId;
+
+  EyeTrackingData({
+    required this.timeUsec,
+    required this.gazeOriginX,
+    required this.gazeOriginY,
+    required this.gazeOriginZ,
+    required this.gazeDirectionX,
+    required this.gazeDirectionY,
+    required this.gazeDirectionZ,
+    required this.videoGazeX,
+    required this.videoGazeY,
+    required this.surfaceGazeX,
+    required this.surfaceGazeY,
+    required this.sensorId,
+    required this.surfaceId,
+  });
+
+  EyeTrackingData copyWith({
+    uint64_t? timeUsec,
+    float? gazeOriginX,
+    float? gazeOriginY,
+    float? gazeOriginZ,
+    float? gazeDirectionX,
+    float? gazeDirectionY,
+    float? gazeDirectionZ,
+    float? videoGazeX,
+    float? videoGazeY,
+    float? surfaceGazeX,
+    float? surfaceGazeY,
+    uint8_t? sensorId,
+    uint8_t? surfaceId,
+  }) {
+    return EyeTrackingData(
+      timeUsec: timeUsec ?? this.timeUsec,
+      gazeOriginX: gazeOriginX ?? this.gazeOriginX,
+      gazeOriginY: gazeOriginY ?? this.gazeOriginY,
+      gazeOriginZ: gazeOriginZ ?? this.gazeOriginZ,
+      gazeDirectionX: gazeDirectionX ?? this.gazeDirectionX,
+      gazeDirectionY: gazeDirectionY ?? this.gazeDirectionY,
+      gazeDirectionZ: gazeDirectionZ ?? this.gazeDirectionZ,
+      videoGazeX: videoGazeX ?? this.videoGazeX,
+      videoGazeY: videoGazeY ?? this.videoGazeY,
+      surfaceGazeX: surfaceGazeX ?? this.surfaceGazeX,
+      surfaceGazeY: surfaceGazeY ?? this.surfaceGazeY,
+      sensorId: sensorId ?? this.sensorId,
+      surfaceId: surfaceId ?? this.surfaceId,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'msgId': msgId,
+        'timeUsec': timeUsec,
+        'gazeOriginX': gazeOriginX,
+        'gazeOriginY': gazeOriginY,
+        'gazeOriginZ': gazeOriginZ,
+        'gazeDirectionX': gazeDirectionX,
+        'gazeDirectionY': gazeDirectionY,
+        'gazeDirectionZ': gazeDirectionZ,
+        'videoGazeX': videoGazeX,
+        'videoGazeY': videoGazeY,
+        'surfaceGazeX': surfaceGazeX,
+        'surfaceGazeY': surfaceGazeY,
+        'sensorId': sensorId,
+        'surfaceId': surfaceId,
+      };
+
+  factory EyeTrackingData.parse(ByteData data_) {
+    if (data_.lengthInBytes < EyeTrackingData.mavlinkEncodedLength) {
+      var len = EyeTrackingData.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var timeUsec = data_.getUint64(0, Endian.little);
+    var gazeOriginX = data_.getFloat32(8, Endian.little);
+    var gazeOriginY = data_.getFloat32(12, Endian.little);
+    var gazeOriginZ = data_.getFloat32(16, Endian.little);
+    var gazeDirectionX = data_.getFloat32(20, Endian.little);
+    var gazeDirectionY = data_.getFloat32(24, Endian.little);
+    var gazeDirectionZ = data_.getFloat32(28, Endian.little);
+    var videoGazeX = data_.getFloat32(32, Endian.little);
+    var videoGazeY = data_.getFloat32(36, Endian.little);
+    var surfaceGazeX = data_.getFloat32(40, Endian.little);
+    var surfaceGazeY = data_.getFloat32(44, Endian.little);
+    var sensorId = data_.getUint8(48);
+    var surfaceId = data_.getUint8(49);
+
+    return EyeTrackingData(
+        timeUsec: timeUsec,
+        gazeOriginX: gazeOriginX,
+        gazeOriginY: gazeOriginY,
+        gazeOriginZ: gazeOriginZ,
+        gazeDirectionX: gazeDirectionX,
+        gazeDirectionY: gazeDirectionY,
+        gazeDirectionZ: gazeDirectionZ,
+        videoGazeX: videoGazeX,
+        videoGazeY: videoGazeY,
+        surfaceGazeX: surfaceGazeX,
+        surfaceGazeY: surfaceGazeY,
+        sensorId: sensorId,
+        surfaceId: surfaceId);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint64(0, timeUsec, Endian.little);
+    data_.setFloat32(8, gazeOriginX, Endian.little);
+    data_.setFloat32(12, gazeOriginY, Endian.little);
+    data_.setFloat32(16, gazeOriginZ, Endian.little);
+    data_.setFloat32(20, gazeDirectionX, Endian.little);
+    data_.setFloat32(24, gazeDirectionY, Endian.little);
+    data_.setFloat32(28, gazeDirectionZ, Endian.little);
+    data_.setFloat32(32, videoGazeX, Endian.little);
+    data_.setFloat32(36, videoGazeY, Endian.little);
+    data_.setFloat32(40, surfaceGazeX, Endian.little);
+    data_.setFloat32(44, surfaceGazeY, Endian.little);
+    data_.setUint8(48, sensorId);
+    data_.setUint8(49, surfaceId);
+    return data_;
+  }
+}
+
+class MavlinkDialectMarsh implements MavlinkDialect {
+  static const int mavlinkVersion = 3;
 
   @override
   int get version => mavlinkVersion;
@@ -52148,30 +51235,16 @@ class MavlinkDialectDevelopment implements MavlinkDialect {
         return OpenDroneIdSystemUpdate.parse(data);
       case 12920:
         return HygrometerSensor.parse(data);
-      case 296:
-        return GlobalPosition.parse(data);
-      case 354:
-        return SetVelocityLimits.parse(data);
-      case 355:
-        return VelocityLimits.parse(data);
-      case 369:
-        return BatteryStatusV2.parse(data);
-      case 414:
-        return GroupStart.parse(data);
-      case 415:
-        return GroupEnd.parse(data);
-      case 420:
-        return RadioRcChannels.parse(data);
-      case 441:
-        return GnssIntegrity.parse(data);
-      case 510:
-        return TargetAbsolute.parse(data);
-      case 511:
-        return TargetRelative.parse(data);
-      case 512:
-        return ControlStatus.parse(data);
-      case 292:
-        return EscEeprom.parse(data);
+      case 52501:
+        return ControlLoadingAxis.parse(data);
+      case 52502:
+        return MotionPlatformState.parse(data);
+      case 52503:
+        return RexrothMotionPlatform.parse(data);
+      case 52504:
+        return MotionCueExtra.parse(data);
+      case 52505:
+        return EyeTrackingData.parse(data);
       default:
         return null;
     }
@@ -52644,30 +51717,16 @@ class MavlinkDialectDevelopment implements MavlinkDialect {
         return OpenDroneIdSystemUpdate.crcExtra;
       case 12920:
         return HygrometerSensor.crcExtra;
-      case 296:
-        return GlobalPosition.crcExtra;
-      case 354:
-        return SetVelocityLimits.crcExtra;
-      case 355:
-        return VelocityLimits.crcExtra;
-      case 369:
-        return BatteryStatusV2.crcExtra;
-      case 414:
-        return GroupStart.crcExtra;
-      case 415:
-        return GroupEnd.crcExtra;
-      case 420:
-        return RadioRcChannels.crcExtra;
-      case 441:
-        return GnssIntegrity.crcExtra;
-      case 510:
-        return TargetAbsolute.crcExtra;
-      case 511:
-        return TargetRelative.crcExtra;
-      case 512:
-        return ControlStatus.crcExtra;
-      case 292:
-        return EscEeprom.crcExtra;
+      case 52501:
+        return ControlLoadingAxis.crcExtra;
+      case 52502:
+        return MotionPlatformState.crcExtra;
+      case 52503:
+        return RexrothMotionPlatform.crcExtra;
+      case 52504:
+        return MotionCueExtra.crcExtra;
+      case 52505:
+        return EyeTrackingData.crcExtra;
       default:
         return -1;
     }

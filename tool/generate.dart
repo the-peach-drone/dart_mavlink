@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:collection';
 import 'package:xml/xml.dart';
-import 'package:args/args.dart';
+import 'dart:isolate';
 import 'dart:math';
 import 'package:path/path.dart' as path;
 import 'package:dart_mavlink/crc.dart';
@@ -48,7 +48,7 @@ class DialectEnums extends IterableMixin<DialectEnum> {
         throw FormatException('The name of enum element should not be empty.');
       }
 
-      var description = elmEnum.getElement('description')?.text;
+      var description = elmEnum.getElement('description')?.innerText;
 
       DialectDeprecated? dlctDeprecated = DialectDeprecated.parseElement(elmEnum.getElement('deprecated'));
 
@@ -85,8 +85,7 @@ class DialectEnum {
 
   final String nameForDart;
 
-  DialectEnum(this.name, this.description, this.deprecated, this.entries)
-    : nameForDart = camelCase(name);
+  DialectEnum(this.name, this.description, this.deprecated, this.entries) : nameForDart = camelCase(name);
 }
 
 /// Containes [enum](https://mavlink.io/en/guide/xml_schema.html#entry)
@@ -118,7 +117,7 @@ class DialectEntry {
   final String nameForDart;
 
   DialectEntry(this.name, this.value, this.description, this.deprecated, this.wip, this.hasLocation, this.isDestination, this.params)
-    : nameForDart = lowerCamelCase(name);
+      : nameForDart = lowerCamelCase(name);
 
   static DialectEntry parseElement(XmlElement elmEntry, bool enumIsMavCmd) {
     String name = elmEntry.getAttribute('name') ?? '';
@@ -140,7 +139,7 @@ class DialectEntry {
     } else {
       value = int.parse(valueStr);
     }
-    String? description = elmEntry.getElement('description')?.text;
+    String? description = elmEntry.getElement('description')?.innerText;
 
     var deprecated = DialectDeprecated.parseElement(elmEntry.getElement('deprecated'));
 
@@ -164,7 +163,7 @@ class DialectEntry {
 
         var index = int.parse(elmParam.getAttribute('index') ?? '');
 
-        var description = elmParam.text;
+        var description = elmParam.innerText;
 
         params[index - 1] = DialectParam(
           index,
@@ -181,10 +180,11 @@ class DialectEntry {
       }
     } else {
       if (attrHasLocation != null || attrIsDestination != null) {
-        throw FormatException('The hasLocation attribute and isDestination must be child of MAV_CMD.');
+        // Warning: Some entries in non-MAV_CMD enums may have these attributes incorrectly
+        // We'll ignore them instead of throwing an error
+        print('Warning: Entry "$name" has hasLocation/isDestination attributes but is not in MAV_CMD enum. Ignoring these attributes.');
       }
     }
-
 
     return DialectEntry(name, value, description, deprecated, wip, hasLocation, isDestination, params);
   }
@@ -194,12 +194,12 @@ class DialectEntry {
       return defaultValue;
     }
     switch (str) {
-    case 'true':
-      return true;
-    case 'false':
-      return false;
-    default:
-      throw FormatException('The hasLocation of etnry element should not be true or false but "$str"');
+      case 'true':
+        return true;
+      case 'false':
+        return false;
+      default:
+        throw FormatException('The hasLocation of etnry element should not be true or false but "$str"');
     }
   }
 }
@@ -235,16 +235,16 @@ class DialectParam {
   // Optional. Default is false.
   final bool? reserved;
 
-  DialectParam.empty(this.index) :
-    description ="",
-    label = null,
-    units = null,
-    enum_ = null,
-    decimalPlaces = null,
-    increment = null,
-    minValue = null,
-    maxValue = null,
-    reserved = null;
+  DialectParam.empty(this.index)
+      : description = "",
+        label = null,
+        units = null,
+        enum_ = null,
+        decimalPlaces = null,
+        increment = null,
+        minValue = null,
+        maxValue = null,
+        reserved = null;
 
   DialectParam(this.index, this.description, this.label, this.units, this.enum_, this.decimalPlaces, this.increment, this.minValue, this.maxValue, this.reserved);
 }
@@ -268,7 +268,7 @@ class DialectDeprecated {
 
     String since = elmDeprecated.getAttribute('since') ?? '';
     String replacedBy = elmDeprecated.getAttribute('replaced_by') ?? '';
-    String text = elmDeprecated.text;
+    String text = elmDeprecated.innerText;
 
     if (since.isEmpty) {
       throw FormatException('The since of deprecated element should not be empty.');
@@ -326,7 +326,7 @@ class DialectMessages extends IterableMixin<DialectMessage> {
         throw FormatException('The name of message element should not be empty.');
       }
 
-      String? description = elmMessage.getElement('description')?.text;
+      String? description = elmMessage.getElement('description')?.innerText;
       if (description == null) {
         throw FormatException('The description of message element should not be empty.');
       }
@@ -365,23 +365,23 @@ class DialectMessage {
   /// https://mavlink.io/en/guide/serialization.html#field_reordering
   final List<DialectField> orderedFields;
 
-  DialectMessage(this.id, this.name, this.description, this.fields,this.deprecated)
-    : nameForDart = camelCase(name)
-    , orderedFields = fields.where((f) => !f.isExtension).toList()
+  DialectMessage(this.id, this.name, this.description, this.fields, this.deprecated)
+    : nameForDart = camelCase(name),
+    orderedFields = fields.where((f) => !f.isExtension).toList()
         ..sort((a, b) => b.parsedType.bit.compareTo(a.parsedType.bit))
         ..addAll(fields.where((f) => f.isExtension));
 
   int calculateCrcExtra() {
     var crc = CrcX25();
-    crc.accumulateString(name + ' ');
+    crc.accumulateString('$name ');
 
     for (var f in orderedFields) {
       if (f.isExtension) {
         continue;
       }
 
-      crc.accumulateString(f.unitType + ' ');
-      crc.accumulateString(f.name + ' ');
+      crc.accumulateString('${f.unitType} ');
+      crc.accumulateString('${f.name} ');
 
       if (f.parsedType.isArray) {
         crc.accumulate(f.parsedType.arrayLength);
@@ -416,8 +416,7 @@ class DialectField {
   DialectField(this.name, this.type, this.description, this.isExtension, this.units, this.enum_)
     : nameForDart = lowerCamelCase(name);
 
-  ParsedMavlinkType get parsedType =>
-    ParsedMavlinkType.parse(type);
+  ParsedMavlinkType get parsedType => ParsedMavlinkType.parse(type);
 
   String get unitType {
     int indexOfBracket = type.indexOf('[');
@@ -445,7 +444,7 @@ class DialectField {
       type = 'uint8_t';
     }
 
-    String description = elmFiled.text;
+    String description = elmFiled.innerText;
 
     String? units = elmFiled.getAttribute('units');
     String? enum_ = elmFiled.getAttribute('enum');
@@ -483,7 +482,7 @@ class DialectDocument {
     var elmMavlink = xmlDoc.getElement('mavlink');
     var iterElmInclude = elmMavlink?.findAllElements('include') ?? [];
     for (var inc in iterElmInclude) {
-      var includingPath = path.join(path.dirname(dialectPath), inc.text);
+      var includingPath = path.join(path.dirname(dialectPath), inc.innerText);
       var includingDoc = await DialectDocument.parse(includingPath);
 
       dlctEnums.addAll(includingDoc.enums);
@@ -497,13 +496,13 @@ class DialectDocument {
     }
 
     // version tag
-    var t = elmMavlink?.getElement('version')?.text;
+    var t = elmMavlink?.getElement('version')?.innerText;
     if (t != null) {
       version = int.parse(t);
     }
 
     // dialect tag
-    t = elmMavlink?.getElement('dialect')?.text;
+    t = elmMavlink?.getElement('dialect')?.innerText;
     if (t != null) {
       dialect = int.parse(t);
     }
@@ -535,7 +534,26 @@ String lowerCamelCase(String s) {
     return sep[0];
   }
 
-  return sep[0] + sep.sublist(1).map((e) => capitalize(e)).join('');
+  // Build the camelCase name, but preserve underscores between single digits
+  // to distinguish cases like "75" from "7_5"
+  String result = sep[0];
+  for (int i = 1; i < sep.length; i++) {
+    String current = sep[i];
+    String previous = (i > 0) ? sep[i - 1] : '';
+
+    // If both current and previous segments are single-digit numbers,
+    // keep an underscore to preserve the distinction
+    bool currentIsSingleDigit = current.length == 1 && int.tryParse(current) != null;
+    bool previousIsSingleDigit = previous.length == 1 && int.tryParse(previous) != null;
+
+    if (currentIsSingleDigit && previousIsSingleDigit) {
+      result += '_$current';
+    } else {
+      result += capitalize(current);
+    }
+  }
+
+  return result;
 }
 
 String dialectNameFromPath(String p) {
@@ -578,31 +596,31 @@ class ParsedMavlinkType {
       arrayLength = int.parse(m.group(5)!);
     }
 
-    var t = BasicType.int;  // type
-    var b = 8;      // bit
+    var t = BasicType.int; // type
+    var b = 8; // bit
     switch (m.group(1)) {
-    case 'int':
-      t = BasicType.int;
-      b = int.parse(m.group(2)!);
-      break;
-    case 'uint':
-      t = BasicType.uint;
-      b = int.parse(m.group(2)!);
-      break;
-    case 'char':
-      t = BasicType.int;
-      b = 8;
-      break;
-    case 'float':
-      t = BasicType.float;
-      b = 32;
-      break;
-    case 'double':
-      t = BasicType.float;
-      b = 64;
-      break;
-    default:
-      throw FormatException('Unexpected type, ${m.group(1)}');
+      case 'int':
+        t = BasicType.int;
+        b = int.parse(m.group(2)!);
+        break;
+      case 'uint':
+        t = BasicType.uint;
+        b = int.parse(m.group(2)!);
+        break;
+      case 'char':
+       t = BasicType.int;
+        b  = 8;
+        break;
+      case 'float':
+        t = BasicType.float;
+        b = 32;
+        break;
+      case 'double':
+        t = BasicType.float;
+        b = 64;
+        break;
+      default:
+        throw FormatException('Unexpected type, ${m.group(1)}');
     }
 
     return ParsedMavlinkType(t, b, arrayLength, mavlinkType);
@@ -660,10 +678,10 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     content += '\n';
     content += 'static const int mavlinkEncodedLength = ${msg.calculateEncodedLength()};\n';
 
-    content +='\n';
-    content +='@override int get mavlinkMessageId => msgId;\n';
-    content +='\n';
-    content +='@override int get mavlinkCrcExtra => crcExtra;\n';
+    content += '\n';
+    content += '@override int get mavlinkMessageId => msgId;\n';
+    content += '\n';
+    content += '@override int get mavlinkCrcExtra => crcExtra;\n';
 
     for (var field in msg.orderedFields) {
       content += generateAsDartDocumentation(field.description);
@@ -690,14 +708,14 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     // Constructor
     content += '${msg.nameForDart}({';
     String arrayInitializationCode = '';
-    for(var f in msg.orderedFields) {
+    for (var f in msg.orderedFields) {
       content += 'required this.${f.nameForDart}, ';
     }
     if (arrayInitializationCode.isEmpty) {
       content += '});\n';
     } else {
       content += '})\n';
-      content += ':' + arrayInitializationCode.substring(0, arrayInitializationCode.length - 1) + ';';
+      content += ':${arrayInitializationCode.substring(0, arrayInitializationCode.length - 1)};';
     }
     content += '\n';
 
@@ -709,8 +727,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     content += '}){\n';
     content += 'return ${msg.nameForDart}(\n';
     for (var f in msg.orderedFields) {
-      content +=
-          '${f.nameForDart}: ${f.nameForDart} ?? this.${f.nameForDart},\n';
+      content += '${f.nameForDart}: ${f.nameForDart} ?? this.${f.nameForDart},\n';
     }
     content += ');';
     content += '}';
@@ -735,34 +752,34 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     ''';
 
     int byteOffset = 0;
-    for(var f in msg.orderedFields) {
+    for (var f in msg.orderedFields) {
       var t = f.parsedType;
 
       var endianArgument = t.bit == 8 ? '' : ', Endian.little';
       if (t.isArray) {
         // Array type
         switch (t.type) {
-        case BasicType.int:
-          content += 'var ${f.nameForDart} = MavlinkMessage.asInt${t.bit}List(data_, $byteOffset, ${t.arrayLength});\n';
-          break;
-        case BasicType.uint:
-          content += 'var ${f.nameForDart} = MavlinkMessage.asUint${t.bit}List(data_, $byteOffset, ${t.arrayLength});\n';
-          break;
-        case BasicType.float:
-          content += 'var ${f.nameForDart} = MavlinkMessage.asFloat${t.bit}List(data_, $byteOffset, ${t.arrayLength});\n';
-          break;
+          case BasicType.int:
+            content += 'var ${f.nameForDart} = MavlinkMessage.asInt${t.bit}List(data_, $byteOffset, ${t.arrayLength});\n';
+            break;
+          case BasicType.uint:
+            content += 'var ${f.nameForDart} = MavlinkMessage.asUint${t.bit}List(data_, $byteOffset, ${t.arrayLength});\n';
+            break;
+          case BasicType.float:
+           content += 'var ${f.nameForDart} = MavlinkMessage.asFloat${t.bit}List(data_, $byteOffset, ${t.arrayLength});\n';
+            break;
         }
       } else {
         switch (t.type) {
-        case BasicType.int:
-          content += 'var ${f.nameForDart} = data_.getInt${t.bit}($byteOffset$endianArgument);\n';
-          break;
-        case BasicType.uint:
-          content += 'var ${f.nameForDart} = data_.getUint${t.bit}($byteOffset$endianArgument);\n';
-          break;
-        case BasicType.float:
-          content += 'var ${f.nameForDart} = data_.getFloat${t.bit}($byteOffset, Endian.little);\n';
-          break;
+          case BasicType.int:
+            content += 'var ${f.nameForDart} = data_.getInt${t.bit}($byteOffset$endianArgument);\n';
+            break;
+          case BasicType.uint:
+            content += 'var ${f.nameForDart} = data_.getUint${t.bit}($byteOffset$endianArgument);\n';
+            break;
+          case BasicType.float:
+            content += 'var ${f.nameForDart} = data_.getFloat${t.bit}($byteOffset, Endian.little);\n';
+            break;
         }
       }
 
@@ -770,11 +787,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     }
     content += '\n';
     content += 'return ${msg.nameForDart}(';
-    content += [
-      for(var f in msg.orderedFields)
-        '${f.nameForDart}: ${f.nameForDart}'
-      ]
-      .join(', ');
+    content += [ for (var f in msg.orderedFields) '${f.nameForDart}: ${f.nameForDart}' ].join(', ');
     content += ');\n';
     content += '}\n';
     content += '\n';
@@ -784,33 +797,33 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
 ByteData serialize() {
 var data_ = ByteData(mavlinkEncodedLength);''';
     byteOffset = 0;
-    for(var f in msg.orderedFields) {
+    for (var f in msg.orderedFields) {
       var t = f.parsedType;
 
       var endianArgument = t.bit == 8 ? '' : ', Endian.little';
       if (t.isArray) {
         switch (t.type) {
-        case BasicType.int:
-          content += 'MavlinkMessage.setInt${t.bit}List(data_, $byteOffset, ${f.nameForDart});\n';
-          break;
-        case BasicType.uint:
-          content += 'MavlinkMessage.setUint${t.bit}List(data_, $byteOffset, ${f.nameForDart});\n';
-          break;
-        case BasicType.float:
-          content += 'MavlinkMessage.setFloat${t.bit}List(data_, $byteOffset, ${f.nameForDart});\n';
-          break;
+          case BasicType.int:
+            content += 'MavlinkMessage.setInt${t.bit}List(data_, $byteOffset, ${f.nameForDart});\n';
+            break;
+          case BasicType.uint:
+            content += 'MavlinkMessage.setUint${t.bit}List(data_, $byteOffset, ${f.nameForDart});\n';
+            break;
+          case BasicType.float:
+            content += 'MavlinkMessage.setFloat${t.bit}List(data_, $byteOffset, ${f.nameForDart});\n';
+            break;
         }
       } else {
         switch (t.type) {
-        case BasicType.int:
-          content += 'data_.setInt${t.bit}($byteOffset, ${f.nameForDart}$endianArgument);\n';
-          break;
-        case BasicType.uint:
-          content += 'data_.setUint${t.bit}($byteOffset, ${f.nameForDart}$endianArgument);\n';
-          break;
-        case BasicType.float:
-          content += 'data_.setFloat${t.bit}($byteOffset, ${f.nameForDart}, Endian.little);\n';
-          break;
+          case BasicType.int:
+            content += 'data_.setInt${t.bit}($byteOffset, ${f.nameForDart}$endianArgument);\n';
+            break;
+          case BasicType.uint:
+            content += 'data_.setUint${t.bit}($byteOffset, ${f.nameForDart}$endianArgument);\n';
+            break;
+          case BasicType.float:
+            content += 'data_.setFloat${t.bit}($byteOffset, ${f.nameForDart}, Endian.little);\n';
+            break;
         }
       }
 
@@ -871,8 +884,7 @@ default:
   return true;
 }
 
-String generateAsDartDocumentation(String str) 
-  => str.split('\n').map((s) => '/// ' + s.trimLeft()).join('\n') + '\n';
+String generateAsDartDocumentation(String str) => '${str.split('\n').map((s) => '/// ${s.trimLeft()}').join('\n')}\n';
 
 String asDartType(String mavlinkType, String? enum_) {
   var basicTypes = [
@@ -909,42 +921,60 @@ Future<void> runFormatter(String path) async {
   await Process.run('dart', ['format', path]);
 }
 
-void main(List<String> arguments) async {
-  ArgParser parser = ArgParser();
-  parser.addOption("dialect",
-      help:
-          "Path to the dialect.xml file to generate dart files from. Leave emtpy to parse all dialect files in the default location.",
-      abbr: "d");
-  parser.addFlag("help",
-      abbr: "h", negatable: false, help: "display usage help", callback: (display) {
-    if(!display) return;
-    print(parser.usage);
-    exit(0);
-  });
-
-  ArgResults argResults = parser.parse(arguments);
-  final String? dialect = argResults["dialect"];
-
-  List dir;
-  if (dialect == null) {
-    dir = await Directory('mavlink/message_definitions/v1.0/')
-        .list()
-        .map((f) => f.path.toString())
-        .where((f) => (!f.endsWith('all.xml')) && (!f.contains('test')))
-        .toList();
-  }
-  else
-  {
-    dir = [dialect];
-  }
+Future<void> main(List<String> arguments) async {
+  final xmlPaths = await Directory('mavlink/message_definitions/v1.0/')
+      .list()
+      .where((entry) => entry is File)
+      .map((entity) => entity.path.toString())
+      .where((filePath) => (!filePath.endsWith('all.xml'))&& (!filePath.contains('test')))
+      .toList();
 
   var dstDir = 'lib/dialects';
   await Directory(dstDir).create(recursive: true);
 
-  for (var xmlPath in dir) {
-    print(xmlPath);
-    var dartPath = path.join(dstDir, path.basenameWithoutExtension(xmlPath).toLowerCase() + '.dart');
-    await generateCode(dartPath, xmlPath);
-    await runFormatter(dartPath);
+  final maxWorkers = max(1, min(Platform.numberOfProcessors, xmlPaths.length));
+  var nextIndex = 0;
+
+  Future<void> worker() async {
+    while (true) {
+      final currentIndex = nextIndex;
+      if (currentIndex >= xmlPaths.length) { break; }
+      nextIndex = currentIndex + 1;
+      final xmlPath = xmlPaths[currentIndex];
+      await _processDialect(xmlPath, dstDir);
+    }
   }
+
+  await Future.wait(List.generate(maxWorkers, (_) => worker()));
+}
+
+Future<void> _processDialect(String xmlPath, String dstDir) async {
+  final receivePort = ReceivePort();
+  await Isolate.spawn(_dialectGeneratorEntry, [ xmlPath, dstDir, receivePort.sendPort ]);
+  final message = await receivePort.first;
+  receivePort.close();
+
+  if (message is Map && message['error'] != null) {
+    throw StateError('Failed to generate $xmlPath: ${message['error']}\n${message['stack']}');
+  }
+}
+
+Future<void> _dialectGeneratorEntry(List<dynamic> args) async {
+  final xmlPath = args[0] as String;
+  final dstDir = args[1] as String;
+  final sendPort = args[2] as SendPort;
+
+  try {
+    await _generateDialectFile(xmlPath, dstDir);
+    sendPort.send(null);
+  } catch (e, st) {
+    sendPort.send({'error': e.toString(), 'stack': st.toString()});
+  }
+}
+
+Future<void> _generateDialectFile(String xmlPath, String dstDir) async {
+  print(xmlPath);
+  var dartPath = path.join(dstDir, '${path.basenameWithoutExtension(xmlPath).toLowerCase()}.dart');
+  await generateCode(dartPath, xmlPath);
+  await runFormatter(dartPath);
 }

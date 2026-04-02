@@ -8712,498 +8712,36 @@ const AirspeedSensorFlags airspeedSensorUnhealthy = 1;
 /// AIRSPEED_SENSOR_USING
 const AirspeedSensorFlags airspeedSensorUsing = 2;
 
-/// Battery status flags for fault, health and state indication.
 ///
-/// MAV_BATTERY_STATUS_FLAGS
-typedef MavBatteryStatusFlags = int;
-
-///
-/// The battery is not ready to use (fly).
-/// Set if the battery has faults or other conditions that make it unsafe to fly with.
-/// Note: It will be the logical OR of other status bits (chosen by the manufacturer/integrator).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE
-const MavBatteryStatusFlags mavBatteryStatusFlagsNotReadyToUse = 1;
-
-///
-/// Battery is charging.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_CHARGING
-const MavBatteryStatusFlags mavBatteryStatusFlagsCharging = 2;
-
-///
-/// Battery is cell balancing (during charging).
-/// Not ready to use (MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE may be set).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_CELL_BALANCING
-const MavBatteryStatusFlags mavBatteryStatusFlagsCellBalancing = 4;
-
-///
-/// Battery cells are not balanced.
-/// Not ready to use.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_CELL_IMBALANCE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultCellImbalance = 8;
-
-///
-/// Battery is auto discharging (towards storage level).
-/// Not ready to use (MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE would be set).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_AUTO_DISCHARGING
-const MavBatteryStatusFlags mavBatteryStatusFlagsAutoDischarging = 16;
-
-///
-/// Battery requires service (not safe to fly).
-/// This is set at vendor discretion.
-/// It is likely to be set for most faults, and may also be set according to a maintenance schedule (such as age, or number of recharge cycles, etc.).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_REQUIRES_SERVICE
-const MavBatteryStatusFlags mavBatteryStatusFlagsRequiresService = 32;
-
-///
-/// Battery is faulty and cannot be repaired (not safe to fly).
-/// This is set at vendor discretion.
-/// The battery should be disposed of safely.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_BAD_BATTERY
-const MavBatteryStatusFlags mavBatteryStatusFlagsBadBattery = 64;
-
-///
-/// Automatic battery protection monitoring is enabled.
-/// When enabled, the system will monitor for certain kinds of faults, such as cells being over-voltage.
-/// If a fault is triggered then and protections are enabled then a safety fault (MAV_BATTERY_STATUS_FLAGS_FAULT_PROTECTION_SYSTEM) will be set and power from the battery will be stopped.
-/// Note that battery protection monitoring should only be enabled when the vehicle is landed. Once the vehicle is armed, or starts moving, the protections should be disabled to prevent false positives from disabling the output.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_PROTECTIONS_ENABLED
-const MavBatteryStatusFlags mavBatteryStatusFlagsProtectionsEnabled = 128;
-
-///
-/// The battery fault protection system had detected a fault and cut all power from the battery.
-/// This will only trigger if MAV_BATTERY_STATUS_FLAGS_PROTECTIONS_ENABLED is set.
-/// Other faults like MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_VOLT may also be set, indicating the cause of the protection fault.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_PROTECTION_SYSTEM
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultProtectionSystem = 256;
-
-/// One or more cells are above their maximum voltage rating.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_VOLT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultOverVolt = 512;
-
-///
-/// One or more cells are below their minimum voltage rating.
-/// A battery that had deep-discharged might be irrepairably damaged, and set both MAV_BATTERY_STATUS_FLAGS_FAULT_UNDER_VOLT and MAV_BATTERY_STATUS_FLAGS_BAD_BATTERY.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_UNDER_VOLT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultUnderVolt = 1024;
-
-/// Over-temperature fault.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_TEMPERATURE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultOverTemperature = 2048;
-
-/// Under-temperature fault.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_UNDER_TEMPERATURE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultUnderTemperature = 4096;
-
-/// WIP.
-/// Circular fence area centered on home. The vehicle must stay inside this area. If home is moved, the fence moves.
-///
-/// MAV_CMD_NAV_FENCE_HOME_CIRCLE_INCLUSION
-const MavBatteryStatusFlags mavCmdNavFenceHomeCircleInclusion = 5005;
-
-/// Over-current fault.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_CURRENT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultOverCurrent = 8192;
-
-///
-/// Short circuit event detected.
-/// The battery may or may not be safe to use (check other flags).
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_SHORT_CIRCUIT
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultShortCircuit = 16384;
-
-/// Voltage not compatible with power rail voltage (batteries on same power rail should have similar voltage).
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_INCOMPATIBLE_VOLTAGE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultIncompatibleVoltage =
-    32768;
-
-/// Battery firmware is not compatible with current autopilot firmware.
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_INCOMPATIBLE_FIRMWARE
-const MavBatteryStatusFlags mavBatteryStatusFlagsFaultIncompatibleFirmware =
-    65536;
-
-/// Battery is not compatible due to cell configuration (e.g. 5s1p when vehicle requires 6s).
-///
-/// MAV_BATTERY_STATUS_FLAGS_FAULT_INCOMPATIBLE_CELLS_CONFIGURATION
-const MavBatteryStatusFlags
-    mavBatteryStatusFlagsFaultIncompatibleCellsConfiguration = 131072;
-
-///
-/// Battery capacity_consumed and capacity_remaining values are relative to a full battery (they sum to the total capacity of the battery).
-/// This flag would be set for a smart battery that can accurately determine its remaining charge across vehicle reboots and discharge/recharge cycles.
-/// If unset the capacity_consumed indicates the consumption since vehicle power-on, as measured using a power monitor. The capacity_remaining, if provided, indicates the estimated remaining capacity on the assumption that the battery was full on vehicle boot.
-/// If unset a GCS is recommended to advise that users fully charge the battery on power on.
-///
-///
-/// MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL
-const MavBatteryStatusFlags mavBatteryStatusFlagsCapacityRelativeToFull =
-    262144;
-
-/// Reserved (not used). If set, this will indicate that an additional status field exists for higher status values.
-///
-/// MAV_BATTERY_STATUS_FLAGS_EXTENDED
-const MavBatteryStatusFlags mavBatteryStatusFlagsExtended = 2147483648;
-
-/// CONTROL_STATUS flags.
-///
-/// GCS_CONTROL_STATUS_FLAGS
-typedef GcsControlStatusFlags = int;
-
-/// If set, this CONTROL_STATUS publishes the controlling GCS for the whole system. If unset, the CONTROL_STATUS indicates the controlling GCS for just the component emitting the message. Note that to request control of the system a GCS should send MAV_CMD_REQUEST_OPERATOR_CONTROL to the component emitting CONTROL_STATUS with this flag set.
-///
-/// GCS_CONTROL_STATUS_FLAGS_SYSTEM_MANAGER
-const GcsControlStatusFlags gcsControlStatusFlagsSystemManager = 1;
-
-/// Takeover allowed (requests for control will be granted). If not set requests for control will be rejected, but the controlling GCS will be notified (and may release control or allow takeover).
-///
-/// GCS_CONTROL_STATUS_FLAGS_TAKEOVER_ALLOWED
-const GcsControlStatusFlags gcsControlStatusFlagsTakeoverAllowed = 2;
-
-/// These flags indicate the sensor reporting capabilities for TARGET_ABSOLUTE.
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_FLAGS
-typedef TargetAbsoluteSensorCapabilityFlags = int;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_POSITION
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityPosition = 1;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_VELOCITY
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityVelocity = 2;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_ACCELERATION
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityAcceleration = 4;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_ATTITUDE
-const TargetAbsoluteSensorCapabilityFlags
-    targetAbsoluteSensorCapabilityAttitude = 8;
-
-///
-/// TARGET_ABSOLUTE_SENSOR_CAPABILITY_RATES
-const TargetAbsoluteSensorCapabilityFlags targetAbsoluteSensorCapabilityRates =
-    16;
-
-/// The frame of a target observation from an onboard sensor.
-///
-/// TARGET_OBS_FRAME
-typedef TargetObsFrame = int;
-
-/// NED local tangent frame (x: North, y: East, z: Down) with origin fixed relative to earth.
-///
-/// TARGET_OBS_FRAME_LOCAL_NED
-const TargetObsFrame targetObsFrameLocalNed = 0;
-
-/// FRD local frame aligned to the vehicle's attitude (x: Forward, y: Right, z: Down) with an origin that travels with vehicle.
-///
-/// TARGET_OBS_FRAME_BODY_FRD
-const TargetObsFrame targetObsFrameBodyFrd = 1;
-
-/// NED local tangent frame (x: North, y: East, z: Down) with an origin that travels with vehicle.
-///
-/// TARGET_OBS_FRAME_LOCAL_OFFSET_NED
-const TargetObsFrame targetObsFrameLocalOffsetNed = 2;
-
-/// Other sensor frame for target observations neither in local NED nor in body FRD.
-///
-/// TARGET_OBS_FRAME_OTHER
-const TargetObsFrame targetObsFrameOther = 3;
-
-/// RADIO_RC_CHANNELS flags (bitmask).
+/// How to configure LEDs. We can:
+/// - Set all LEDs to the first color in our colors array.
+/// - Set up to 8 consecutive LEDs, starting from a given index, to colors provided in an array.
+/// - Set the LED colors to change according to the flight mode.
+/// - Turn all LEDs off (clear).
 ///
-/// RADIO_RC_CHANNELS_FLAGS
-typedef RadioRcChannelsFlags = int;
-
-/// Failsafe is active. The content of the RC channels data in the RADIO_RC_CHANNELS message is implementation dependent.
-///
-/// RADIO_RC_CHANNELS_FLAGS_FAILSAFE
-const RadioRcChannelsFlags radioRcChannelsFlagsFailsafe = 1;
-
-/// Channel data may be out of date. This is set when the receiver is unable to validate incoming data from the transmitter and has therefore resent the last valid data it received.
-///
-/// RADIO_RC_CHANNELS_FLAGS_OUTDATED
-const RadioRcChannelsFlags radioRcChannelsFlagsOutdated = 2;
-
-/// Flags indicating errors in a GPS receiver.
-///
-/// GPS_SYSTEM_ERROR_FLAGS
-typedef GpsSystemErrorFlags = int;
-
-/// There are problems with incoming correction streams.
-///
-/// GPS_SYSTEM_ERROR_INCOMING_CORRECTIONS
-const GpsSystemErrorFlags gpsSystemErrorIncomingCorrections = 1;
-
-/// There are problems with the configuration.
-///
-/// GPS_SYSTEM_ERROR_CONFIGURATION
-const GpsSystemErrorFlags gpsSystemErrorConfiguration = 2;
-
-/// There are problems with the software on the GPS receiver.
-///
-/// GPS_SYSTEM_ERROR_SOFTWARE
-const GpsSystemErrorFlags gpsSystemErrorSoftware = 4;
-
-/// There are problems with an antenna connected to the GPS receiver.
-///
-/// GPS_SYSTEM_ERROR_ANTENNA
-const GpsSystemErrorFlags gpsSystemErrorAntenna = 8;
-
-/// There are problems handling all incoming events.
-///
-/// GPS_SYSTEM_ERROR_EVENT_CONGESTION
-const GpsSystemErrorFlags gpsSystemErrorEventCongestion = 16;
-
-/// The GPS receiver CPU is overloaded.
-///
-/// GPS_SYSTEM_ERROR_CPU_OVERLOAD
-const GpsSystemErrorFlags gpsSystemErrorCpuOverload = 32;
-
-/// The GPS receiver is experiencing output congestion.
-///
-/// GPS_SYSTEM_ERROR_OUTPUT_CONGESTION
-const GpsSystemErrorFlags gpsSystemErrorOutputCongestion = 64;
-
-/// Signal authentication state in a GPS receiver.
-///
-/// GPS_AUTHENTICATION_STATE
-typedef GpsAuthenticationState = int;
-
-/// The GPS receiver does not provide GPS signal authentication info.
-///
-/// GPS_AUTHENTICATION_STATE_UNKNOWN
-const GpsAuthenticationState gpsAuthenticationStateUnknown = 0;
-
-/// The GPS receiver is initializing signal authentication.
-///
-/// GPS_AUTHENTICATION_STATE_INITIALIZING
-const GpsAuthenticationState gpsAuthenticationStateInitializing = 1;
-
-/// The GPS receiver encountered an error while initializing signal authentication.
-///
-/// GPS_AUTHENTICATION_STATE_ERROR
-const GpsAuthenticationState gpsAuthenticationStateError = 2;
-
-/// The GPS receiver has correctly authenticated all signals.
-///
-/// GPS_AUTHENTICATION_STATE_OK
-const GpsAuthenticationState gpsAuthenticationStateOk = 3;
-
-/// GPS signal authentication is disabled on the receiver.
-///
-/// GPS_AUTHENTICATION_STATE_DISABLED
-const GpsAuthenticationState gpsAuthenticationStateDisabled = 4;
-
-/// Signal jamming state in a GPS receiver.
-///
-/// GPS_JAMMING_STATE
-typedef GpsJammingState = int;
-
-/// The GPS receiver does not provide GPS signal jamming info.
-///
-/// GPS_JAMMING_STATE_UNKNOWN
-const GpsJammingState gpsJammingStateUnknown = 0;
-
-/// The GPS receiver detected no signal jamming.
-///
-/// GPS_JAMMING_STATE_NOT_JAMMED
-const GpsJammingState gpsJammingStateNotJammed = 1;
-
-/// The GPS receiver detected and mitigated signal jamming.
-///
-/// GPS_JAMMING_STATE_MITIGATED
-const GpsJammingState gpsJammingStateMitigated = 2;
-
-/// The GPS receiver detected signal jamming.
-///
-/// GPS_JAMMING_STATE_DETECTED
-const GpsJammingState gpsJammingStateDetected = 3;
-
-/// Signal spoofing state in a GPS receiver.
-///
-/// GPS_SPOOFING_STATE
-typedef GpsSpoofingState = int;
-
-/// The GPS receiver does not provide GPS signal spoofing info.
-///
-/// GPS_SPOOFING_STATE_UNKNOWN
-const GpsSpoofingState gpsSpoofingStateUnknown = 0;
-
-/// The GPS receiver detected no signal spoofing.
-///
-/// GPS_SPOOFING_STATE_NOT_SPOOFED
-const GpsSpoofingState gpsSpoofingStateNotSpoofed = 1;
-
-/// The GPS receiver detected and mitigated signal spoofing.
-///
-/// GPS_SPOOFING_STATE_MITIGATED
-const GpsSpoofingState gpsSpoofingStateMitigated = 2;
-
-/// The GPS receiver detected signal spoofing but still has a fix.
-///
-/// GPS_SPOOFING_STATE_DETECTED
-const GpsSpoofingState gpsSpoofingStateDetected = 3;
-
-/// State of RAIM processing.
-///
-/// GPS_RAIM_STATE
-typedef GpsRaimState = int;
-
-/// RAIM capability is unknown.
-///
-/// GPS_RAIM_STATE_UNKNOWN
-const GpsRaimState gpsRaimStateUnknown = 0;
-
-/// RAIM is disabled.
-///
-/// GPS_RAIM_STATE_DISABLED
-const GpsRaimState gpsRaimStateDisabled = 1;
-
-/// RAIM integrity check was successful.
-///
-/// GPS_RAIM_STATE_OK
-const GpsRaimState gpsRaimStateOk = 2;
-
-/// RAIM integrity check failed.
-///
-/// GPS_RAIM_STATE_FAILED
-const GpsRaimState gpsRaimStateFailed = 3;
-
-/// Actuator groups to test in MAV_CMD_ACTUATOR_GROUP_TEST.
-///
-/// ACTUATOR_TEST_GROUP
-typedef ActuatorTestGroup = int;
-
-/// Actuators that contribute to roll torque.
-///
-/// ACTUATOR_TEST_GROUP_ROLL_TORQUE
-const ActuatorTestGroup actuatorTestGroupRollTorque = 0;
-
-/// Actuators that contribute to pitch torque.
-///
-/// ACTUATOR_TEST_GROUP_PITCH_TORQUE
-const ActuatorTestGroup actuatorTestGroupPitchTorque = 1;
-
-/// Actuators that contribute to yaw torque.
-///
-/// ACTUATOR_TEST_GROUP_YAW_TORQUE
-const ActuatorTestGroup actuatorTestGroupYawTorque = 2;
-
-/// Actuators that affect collective tilt.
-///
-/// ACTUATOR_TEST_GROUP_COLLECTIVE_TILT
-const ActuatorTestGroup actuatorTestGroupCollectiveTilt = 3;
-
-/// Source for GLOBAL_POSITION measurement or estimate.
-///
-/// GLOBAL_POSITION_SRC
-typedef GlobalPositionSrc = int;
-
-/// Source is unknown or not one of the listed types.
-///
-/// GLOBAL_POSITION_UNKNOWN
-const GlobalPositionSrc globalPositionUnknown = 0;
-
-/// Global Navigation Satellite System (e.g.: GPS, Galileo, Glonass, BeiDou).
-///
-/// GLOBAL_POSITION_GNSS
-const GlobalPositionSrc globalPositionGnss = 1;
-
-/// Vision system (e.g.: map matching).
-///
-/// GLOBAL_POSITION_VISION
-const GlobalPositionSrc globalPositionVision = 2;
-
-/// Pseudo-satellite system (performs GNSS-like function, but usually with transceiver beacons).
-///
-/// GLOBAL_POSITION_PSEUDOLITES
-const GlobalPositionSrc globalPositionPseudolites = 3;
-
-/// Terrain referenced navigation.
-///
-/// GLOBAL_POSITION_TRN
-const GlobalPositionSrc globalPositionTrn = 4;
-
-/// Magnetic positioning.
-///
-/// GLOBAL_POSITION_MAGNETIC
-const GlobalPositionSrc globalPositionMagnetic = 5;
-
-/// Estimated position based on various sensors (eg. a Kalman Filter).
-///
-/// GLOBAL_POSITION_ESTIMATOR
-const GlobalPositionSrc globalPositionEstimator = 6;
-
-/// Status flags for GLOBAL_POSITION
-///
-/// GLOBAL_POSITION_FLAGS
-typedef GlobalPositionFlags = int;
-
-/// Unhealthy sensor/estimator.
-///
-/// GLOBAL_POSITION_UNHEALTHY
-const GlobalPositionFlags globalPositionUnhealthy = 1;
-
-/// True if the data originates from or is consumed by the primary estimator.
-///
-/// GLOBAL_POSITION_PRIMARY
-const GlobalPositionFlags globalPositionPrimary = 2;
-
-/// ESC firmware type identifier.
 ///
-/// ESC_FIRMWARE
-typedef EscFirmware = int;
+/// LED_CONFIG_MODE
+typedef LedConfigMode = int;
 
-/// Unknown firmware.
+/// Set all LEDs in the target strip to the first color in our colors array.
 ///
-/// ESC_FIRMWARE_UNKNOWN
-const EscFirmware escFirmwareUnknown = 0;
+/// LED_CONFIG_MODE_ALL
+const LedConfigMode ledConfigModeAll = 0;
 
-/// AM32 open source ESC firmware.
+/// Set up to 8 consecutive LEDs, starting from the given index, to the colors provided in the colors array.
 ///
-/// ESC_FIRMWARE_AM32
-const EscFirmware escFirmwareAm32 = 1;
+/// LED_CONFIG_MODE_INDEX
+const LedConfigMode ledConfigModeIndex = 1;
 
-/// Bluejay open source ESC firmware.
+/// Set all LEDs in target strip to change color according to the flight mode.
 ///
-/// ESC_FIRMWARE_BLUEJAY
-const EscFirmware escFirmwareBluejay = 2;
+/// LED_CONFIG_MODE_FOLLOW_FLIGHT_MODE
+const LedConfigMode ledConfigModeFollowFlightMode = 2;
 
-/// BLHeli32 ESC firmware.
+/// Set all LEDs in the target strip to black (turn off).
 ///
-/// ESC_FIRMWARE_BLHELI32
-const EscFirmware escFirmwareBlheli32 = 3;
+/// LED_CONFIG_MODE_CLEAR
+const LedConfigMode ledConfigModeClear = 3;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
@@ -49770,15 +49308,24 @@ class HygrometerSensor implements MavlinkMessage {
   }
 }
 
-/// Global position measurement or estimate.
 ///
-/// GLOBAL_POSITION
-class GlobalPosition implements MavlinkMessage {
-  static const int msgId = 296;
+/// Set the colors on an LED strip. The mode field determines how the colors are set. We can:
+/// - Set all LEDs to the first color in our colors array.
+/// - Set up to 8 consecutive LEDs, starting from a given index, to colors provided in an array.
+/// - Set the LED colors to change according to the flight mode.
+/// - Turn all LEDs off (clear).
+/// Which LED strip to configure is specified by the id field.
+/// The colors field is an array of up to 8 colors, each represented as a 32-bit integer in the format 0xWWRRGGBB
+/// where WW is white, RR is the intensity of the red color channel, GG is green, and BB is blue.
+///
+///
+/// LED_STRIP_CONFIG
+class LedStripConfig implements MavlinkMessage {
+  static const int msgId = 52600;
 
-  static const int crcExtra = 50;
+  static const int crcExtra = 181;
 
-  static const int mavlinkEncodedLength = 35;
+  static const int mavlinkEncodedLength = 38;
 
   @override
   int get mavlinkMessageId => msgId;
@@ -49786,1897 +49333,258 @@ class GlobalPosition implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => crcExtra;
 
-  /// Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
+  /// Array of 32-bit color values (0xWWRRGGBB).
   ///
-  /// MAVLink type: uint64_t
+  /// MAVLink type: uint32_t[8]
   ///
-  /// units: us
-  ///
-  /// time_usec
-  final uint64_t timeUsec;
+  /// colors
+  final List<int32_t> colors;
 
-  /// Latitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lat
-  final int32_t lat;
-
-  /// Longitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lon
-  final int32_t lon;
-
-  /// Altitude (MSL - position-system specific value)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// alt
-  final float alt;
-
-  /// Altitude (WGS84 elipsoid)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// alt_ellipsoid
-  final float altEllipsoid;
-
-  /// Standard deviation of horizontal position error
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// eph
-  final float eph;
-
-  /// Standard deviation of vertical position error
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// epv
-  final float epv;
-
-  /// Sensor ID
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Source of position/estimate (such as GNSS, estimator, etc.)
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GlobalPositionSrc]
-  ///
-  /// source
-  final GlobalPositionSrc source;
-
-  /// Status flags
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GlobalPositionFlags]
-  ///
-  /// flags
-  final GlobalPositionFlags flags;
-
-  GlobalPosition({
-    required this.timeUsec,
-    required this.lat,
-    required this.lon,
-    required this.alt,
-    required this.altEllipsoid,
-    required this.eph,
-    required this.epv,
-    required this.id,
-    required this.source,
-    required this.flags,
-  });
-
-  GlobalPosition copyWith({
-    uint64_t? timeUsec,
-    int32_t? lat,
-    int32_t? lon,
-    float? alt,
-    float? altEllipsoid,
-    float? eph,
-    float? epv,
-    uint8_t? id,
-    GlobalPositionSrc? source,
-    GlobalPositionFlags? flags,
-  }) {
-    return GlobalPosition(
-      timeUsec: timeUsec ?? this.timeUsec,
-      lat: lat ?? this.lat,
-      lon: lon ?? this.lon,
-      alt: alt ?? this.alt,
-      altEllipsoid: altEllipsoid ?? this.altEllipsoid,
-      eph: eph ?? this.eph,
-      epv: epv ?? this.epv,
-      id: id ?? this.id,
-      source: source ?? this.source,
-      flags: flags ?? this.flags,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeUsec': timeUsec,
-        'lat': lat,
-        'lon': lon,
-        'alt': alt,
-        'altEllipsoid': altEllipsoid,
-        'eph': eph,
-        'epv': epv,
-        'id': id,
-        'source': source,
-        'flags': flags,
-      };
-
-  factory GlobalPosition.parse(ByteData data_) {
-    if (data_.lengthInBytes < GlobalPosition.mavlinkEncodedLength) {
-      var len = GlobalPosition.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUsec = data_.getUint64(0, Endian.little);
-    var lat = data_.getInt32(8, Endian.little);
-    var lon = data_.getInt32(12, Endian.little);
-    var alt = data_.getFloat32(16, Endian.little);
-    var altEllipsoid = data_.getFloat32(20, Endian.little);
-    var eph = data_.getFloat32(24, Endian.little);
-    var epv = data_.getFloat32(28, Endian.little);
-    var id = data_.getUint8(32);
-    var source = data_.getUint8(33);
-    var flags = data_.getUint8(34);
-
-    return GlobalPosition(
-        timeUsec: timeUsec,
-        lat: lat,
-        lon: lon,
-        alt: alt,
-        altEllipsoid: altEllipsoid,
-        eph: eph,
-        epv: epv,
-        id: id,
-        source: source,
-        flags: flags);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUsec, Endian.little);
-    data_.setInt32(8, lat, Endian.little);
-    data_.setInt32(12, lon, Endian.little);
-    data_.setFloat32(16, alt, Endian.little);
-    data_.setFloat32(20, altEllipsoid, Endian.little);
-    data_.setFloat32(24, eph, Endian.little);
-    data_.setFloat32(28, epv, Endian.little);
-    data_.setUint8(32, id);
-    data_.setUint8(33, source);
-    data_.setUint8(34, flags);
-    return data_;
-  }
-}
-
-/// Set temporary maximum limits for horizontal speed, vertical speed and yaw rate.
-/// The consumer must stream the current limits in VELOCITY_LIMITS at 1 Hz or more (when limits are being set).
-/// The consumer should latch the limits until a new limit is received or the mode is changed.
-///
-///
-/// SET_VELOCITY_LIMITS
-class SetVelocityLimits implements MavlinkMessage {
-  static const int msgId = 354;
-
-  static const int crcExtra = 210;
-
-  static const int mavlinkEncodedLength = 14;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Limit for horizontal movement in MAV_FRAME_LOCAL_NED. NaN: Field not used (ignore)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// horizontal_speed_limit
-  final float horizontalSpeedLimit;
-
-  /// Limit for vertical movement in MAV_FRAME_LOCAL_NED. NaN: Field not used (ignore)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// vertical_speed_limit
-  final float verticalSpeedLimit;
-
-  /// Limit for vehicle turn rate around its yaw axis. NaN: Field not used (ignore)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: rad/s
-  ///
-  /// yaw_rate_limit
-  final float yawRateLimit;
-
-  /// System ID (0 for broadcast).
+  /// System ID.
   ///
   /// MAVLink type: uint8_t
   ///
   /// target_system
   final uint8_t targetSystem;
 
-  /// Component ID (0 for broadcast).
+  /// Component ID (Normally 134 for an LED Strip Controller).
   ///
   /// MAVLink type: uint8_t
   ///
   /// target_component
   final uint8_t targetComponent;
 
-  SetVelocityLimits({
-    required this.horizontalSpeedLimit,
-    required this.verticalSpeedLimit,
-    required this.yawRateLimit,
-    required this.targetSystem,
-    required this.targetComponent,
-  });
-
-  SetVelocityLimits copyWith({
-    float? horizontalSpeedLimit,
-    float? verticalSpeedLimit,
-    float? yawRateLimit,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
-  }) {
-    return SetVelocityLimits(
-      horizontalSpeedLimit: horizontalSpeedLimit ?? this.horizontalSpeedLimit,
-      verticalSpeedLimit: verticalSpeedLimit ?? this.verticalSpeedLimit,
-      yawRateLimit: yawRateLimit ?? this.yawRateLimit,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'horizontalSpeedLimit': horizontalSpeedLimit,
-        'verticalSpeedLimit': verticalSpeedLimit,
-        'yawRateLimit': yawRateLimit,
-        'targetSystem': targetSystem,
-        'targetComponent': targetComponent,
-      };
-
-  factory SetVelocityLimits.parse(ByteData data_) {
-    if (data_.lengthInBytes < SetVelocityLimits.mavlinkEncodedLength) {
-      var len = SetVelocityLimits.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var horizontalSpeedLimit = data_.getFloat32(0, Endian.little);
-    var verticalSpeedLimit = data_.getFloat32(4, Endian.little);
-    var yawRateLimit = data_.getFloat32(8, Endian.little);
-    var targetSystem = data_.getUint8(12);
-    var targetComponent = data_.getUint8(13);
-
-    return SetVelocityLimits(
-        horizontalSpeedLimit: horizontalSpeedLimit,
-        verticalSpeedLimit: verticalSpeedLimit,
-        yawRateLimit: yawRateLimit,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, horizontalSpeedLimit, Endian.little);
-    data_.setFloat32(4, verticalSpeedLimit, Endian.little);
-    data_.setFloat32(8, yawRateLimit, Endian.little);
-    data_.setUint8(12, targetSystem);
-    data_.setUint8(13, targetComponent);
-    return data_;
-  }
-}
-
-/// Current limits for horizontal speed, vertical speed and yaw rate, as set by SET_VELOCITY_LIMITS.
-///
-/// VELOCITY_LIMITS
-class VelocityLimits implements MavlinkMessage {
-  static const int msgId = 355;
-
-  static const int crcExtra = 6;
-
-  static const int mavlinkEncodedLength = 12;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Limit for horizontal movement in MAV_FRAME_LOCAL_NED. NaN: No limit applied
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// horizontal_speed_limit
-  final float horizontalSpeedLimit;
-
-  /// Limit for vertical movement in MAV_FRAME_LOCAL_NED. NaN: No limit applied
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m/s
-  ///
-  /// vertical_speed_limit
-  final float verticalSpeedLimit;
-
-  /// Limit for vehicle turn rate around its yaw axis. NaN: No limit applied
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: rad/s
-  ///
-  /// yaw_rate_limit
-  final float yawRateLimit;
-
-  VelocityLimits({
-    required this.horizontalSpeedLimit,
-    required this.verticalSpeedLimit,
-    required this.yawRateLimit,
-  });
-
-  VelocityLimits copyWith({
-    float? horizontalSpeedLimit,
-    float? verticalSpeedLimit,
-    float? yawRateLimit,
-  }) {
-    return VelocityLimits(
-      horizontalSpeedLimit: horizontalSpeedLimit ?? this.horizontalSpeedLimit,
-      verticalSpeedLimit: verticalSpeedLimit ?? this.verticalSpeedLimit,
-      yawRateLimit: yawRateLimit ?? this.yawRateLimit,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'horizontalSpeedLimit': horizontalSpeedLimit,
-        'verticalSpeedLimit': verticalSpeedLimit,
-        'yawRateLimit': yawRateLimit,
-      };
-
-  factory VelocityLimits.parse(ByteData data_) {
-    if (data_.lengthInBytes < VelocityLimits.mavlinkEncodedLength) {
-      var len = VelocityLimits.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var horizontalSpeedLimit = data_.getFloat32(0, Endian.little);
-    var verticalSpeedLimit = data_.getFloat32(4, Endian.little);
-    var yawRateLimit = data_.getFloat32(8, Endian.little);
-
-    return VelocityLimits(
-        horizontalSpeedLimit: horizontalSpeedLimit,
-        verticalSpeedLimit: verticalSpeedLimit,
-        yawRateLimit: yawRateLimit);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, horizontalSpeedLimit, Endian.little);
-    data_.setFloat32(4, verticalSpeedLimit, Endian.little);
-    data_.setFloat32(8, yawRateLimit, Endian.little);
-    return data_;
-  }
-}
-
-/// Battery dynamic information.
-/// This should be streamed (nominally at 1Hz).
-/// Static/invariant battery information is sent in BATTERY_INFO.
-/// Note that smart batteries should set the MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL bit to indicate that supplied capacity values are relative to a battery that is known to be full.
-/// Power monitors would not set this bit, indicating that capacity_consumed is relative to drone power-on, and that other values are estimated based on the assumption that the battery was full on power-on.
-///
-///
-/// BATTERY_STATUS_V2
-class BatteryStatusV2 implements MavlinkMessage {
-  static const int msgId = 369;
-
-  static const int crcExtra = 151;
-
-  static const int mavlinkEncodedLength = 24;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Battery voltage (total). NaN: field not provided.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: V
-  ///
-  /// voltage
-  final float voltage;
-
-  /// Battery current (through all cells/loads). Positive value when discharging and negative if charging. NaN: field not provided.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: A
-  ///
-  /// current
-  final float current;
-
-  /// Consumed charge. NaN: field not provided. This is either the consumption since power-on or since the battery was full, depending on the value of MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: Ah
-  ///
-  /// capacity_consumed
-  final float capacityConsumed;
-
-  /// Remaining charge (until empty). NaN: field not provided. Note: If MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL is unset, this value is based on the assumption the battery was full when the system was powered.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: Ah
-  ///
-  /// capacity_remaining
-  final float capacityRemaining;
-
-  /// Fault, health, readiness, and other status indications.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// enum: [MavBatteryStatusFlags]
-  ///
-  /// status_flags
-  final MavBatteryStatusFlags statusFlags;
-
-  /// Temperature of the whole battery pack (not internal electronics). INT16_MAX field not provided.
-  ///
-  /// MAVLink type: int16_t
-  ///
-  /// units: cdegC
-  ///
-  /// temperature
-  final int16_t temperature;
-
-  /// Battery ID
+  /// How to configure LEDs.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// id
-  final uint8_t id;
+  /// enum: [LedConfigMode]
+  ///
+  /// mode
+  final LedConfigMode mode;
 
-  /// Remaining battery energy. Values: [0-100], UINT8_MAX: field not provided.
+  /// Set LEDs starting from this index.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// units: %
-  ///
-  /// percent_remaining
-  final uint8_t percentRemaining;
+  /// index
+  final uint8_t index;
 
-  BatteryStatusV2({
-    required this.voltage,
-    required this.current,
-    required this.capacityConsumed,
-    required this.capacityRemaining,
-    required this.statusFlags,
-    required this.temperature,
-    required this.id,
-    required this.percentRemaining,
-  });
-
-  BatteryStatusV2 copyWith({
-    float? voltage,
-    float? current,
-    float? capacityConsumed,
-    float? capacityRemaining,
-    MavBatteryStatusFlags? statusFlags,
-    int16_t? temperature,
-    uint8_t? id,
-    uint8_t? percentRemaining,
-  }) {
-    return BatteryStatusV2(
-      voltage: voltage ?? this.voltage,
-      current: current ?? this.current,
-      capacityConsumed: capacityConsumed ?? this.capacityConsumed,
-      capacityRemaining: capacityRemaining ?? this.capacityRemaining,
-      statusFlags: statusFlags ?? this.statusFlags,
-      temperature: temperature ?? this.temperature,
-      id: id ?? this.id,
-      percentRemaining: percentRemaining ?? this.percentRemaining,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'voltage': voltage,
-        'current': current,
-        'capacityConsumed': capacityConsumed,
-        'capacityRemaining': capacityRemaining,
-        'statusFlags': statusFlags,
-        'temperature': temperature,
-        'id': id,
-        'percentRemaining': percentRemaining,
-      };
-
-  factory BatteryStatusV2.parse(ByteData data_) {
-    if (data_.lengthInBytes < BatteryStatusV2.mavlinkEncodedLength) {
-      var len = BatteryStatusV2.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var voltage = data_.getFloat32(0, Endian.little);
-    var current = data_.getFloat32(4, Endian.little);
-    var capacityConsumed = data_.getFloat32(8, Endian.little);
-    var capacityRemaining = data_.getFloat32(12, Endian.little);
-    var statusFlags = data_.getUint32(16, Endian.little);
-    var temperature = data_.getInt16(20, Endian.little);
-    var id = data_.getUint8(22);
-    var percentRemaining = data_.getUint8(23);
-
-    return BatteryStatusV2(
-        voltage: voltage,
-        current: current,
-        capacityConsumed: capacityConsumed,
-        capacityRemaining: capacityRemaining,
-        statusFlags: statusFlags,
-        temperature: temperature,
-        id: id,
-        percentRemaining: percentRemaining);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, voltage, Endian.little);
-    data_.setFloat32(4, current, Endian.little);
-    data_.setFloat32(8, capacityConsumed, Endian.little);
-    data_.setFloat32(12, capacityRemaining, Endian.little);
-    data_.setUint32(16, statusFlags, Endian.little);
-    data_.setInt16(20, temperature, Endian.little);
-    data_.setUint8(22, id);
-    data_.setUint8(23, percentRemaining);
-    return data_;
-  }
-}
-
-/// Emitted during mission execution when control reaches MAV_CMD_GROUP_START.
-///
-/// GROUP_START
-class GroupStart implements MavlinkMessage {
-  static const int msgId = 414;
-
-  static const int crcExtra = 109;
-
-  static const int mavlinkEncodedLength = 16;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX Epoch time or time since system boot).
-  /// The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// time_usec
-  final uint64_t timeUsec;
-
-  /// Mission-unique group id (from MAV_CMD_GROUP_START).
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// group_id
-  final uint32_t groupId;
-
-  /// CRC32 checksum of current plan for MAV_MISSION_TYPE_ALL. As defined in MISSION_CHECKSUM message.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// mission_checksum
-  final uint32_t missionChecksum;
-
-  GroupStart({
-    required this.timeUsec,
-    required this.groupId,
-    required this.missionChecksum,
-  });
-
-  GroupStart copyWith({
-    uint64_t? timeUsec,
-    uint32_t? groupId,
-    uint32_t? missionChecksum,
-  }) {
-    return GroupStart(
-      timeUsec: timeUsec ?? this.timeUsec,
-      groupId: groupId ?? this.groupId,
-      missionChecksum: missionChecksum ?? this.missionChecksum,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeUsec': timeUsec,
-        'groupId': groupId,
-        'missionChecksum': missionChecksum,
-      };
-
-  factory GroupStart.parse(ByteData data_) {
-    if (data_.lengthInBytes < GroupStart.mavlinkEncodedLength) {
-      var len = GroupStart.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUsec = data_.getUint64(0, Endian.little);
-    var groupId = data_.getUint32(8, Endian.little);
-    var missionChecksum = data_.getUint32(12, Endian.little);
-
-    return GroupStart(
-        timeUsec: timeUsec, groupId: groupId, missionChecksum: missionChecksum);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUsec, Endian.little);
-    data_.setUint32(8, groupId, Endian.little);
-    data_.setUint32(12, missionChecksum, Endian.little);
-    return data_;
-  }
-}
-
-/// Emitted during mission execution when control reaches MAV_CMD_GROUP_END.
-///
-/// GROUP_END
-class GroupEnd implements MavlinkMessage {
-  static const int msgId = 415;
-
-  static const int crcExtra = 161;
-
-  static const int mavlinkEncodedLength = 16;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX Epoch time or time since system boot).
-  /// The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// time_usec
-  final uint64_t timeUsec;
-
-  /// Mission-unique group id (from MAV_CMD_GROUP_END).
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// group_id
-  final uint32_t groupId;
-
-  /// CRC32 checksum of current plan for MAV_MISSION_TYPE_ALL. As defined in MISSION_CHECKSUM message.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// mission_checksum
-  final uint32_t missionChecksum;
-
-  GroupEnd({
-    required this.timeUsec,
-    required this.groupId,
-    required this.missionChecksum,
-  });
-
-  GroupEnd copyWith({
-    uint64_t? timeUsec,
-    uint32_t? groupId,
-    uint32_t? missionChecksum,
-  }) {
-    return GroupEnd(
-      timeUsec: timeUsec ?? this.timeUsec,
-      groupId: groupId ?? this.groupId,
-      missionChecksum: missionChecksum ?? this.missionChecksum,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeUsec': timeUsec,
-        'groupId': groupId,
-        'missionChecksum': missionChecksum,
-      };
-
-  factory GroupEnd.parse(ByteData data_) {
-    if (data_.lengthInBytes < GroupEnd.mavlinkEncodedLength) {
-      var len = GroupEnd.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUsec = data_.getUint64(0, Endian.little);
-    var groupId = data_.getUint32(8, Endian.little);
-    var missionChecksum = data_.getUint32(12, Endian.little);
-
-    return GroupEnd(
-        timeUsec: timeUsec, groupId: groupId, missionChecksum: missionChecksum);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUsec, Endian.little);
-    data_.setUint32(8, groupId, Endian.little);
-    data_.setUint32(12, missionChecksum, Endian.little);
-    return data_;
-  }
-}
-
-/// RC channel outputs from a MAVLink RC receiver for input to a flight controller or other components (allows an RC receiver to connect via MAVLink instead of some other protocol such as PPM-Sum or S.BUS).
-/// Note that this is not intended to be an over-the-air format, and does not replace RC_CHANNELS and similar messages reported by the flight controller.
-/// The target_system field should normally be set to the system id of the system to control, typically the flight controller.
-/// The target_component field can normally be set to 0, so that all components of the system can receive the message.
-/// The channels array field can publish up to 32 channels; the number of channel items used in the array is specified in the count field.
-/// The time_last_update_ms field contains the timestamp of the last received valid channels data in the receiver's time domain.
-/// The count field indicates the first index of the channel array that is not used for channel data (this and later indexes are zero-filled).
-/// The RADIO_RC_CHANNELS_FLAGS_OUTDATED flag is set by the receiver if the channels data is not up-to-date (for example, if new data from the transmitter could not be validated so the last valid data is resent).
-/// The RADIO_RC_CHANNELS_FLAGS_FAILSAFE failsafe flag is set by the receiver if the receiver's failsafe condition is met (implementation dependent, e.g., connection to the RC radio is lost).
-/// In this case time_last_update_ms still contains the timestamp of the last valid channels data, but the content of the channels data is not defined by the protocol (it is up to the implementation of the receiver).
-/// For instance, the channels data could contain failsafe values configured in the receiver; the default is to carry the last valid data.
-/// Note: The RC channels fields are extensions to ensure that they are located at the end of the serialized payload and subject to MAVLink's trailing-zero trimming.
-///
-///
-/// RADIO_RC_CHANNELS
-class RadioRcChannels implements MavlinkMessage {
-  static const int msgId = 420;
-
-  static const int crcExtra = 20;
-
-  static const int mavlinkEncodedLength = 73;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Time when the data in the channels field were last updated (time since boot in the receiver's time domain).
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// units: ms
-  ///
-  /// time_last_update_ms
-  final uint32_t timeLastUpdateMs;
-
-  /// Radio RC channels status flags.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// enum: [RadioRcChannelsFlags]
-  ///
-  /// flags
-  final RadioRcChannelsFlags flags;
-
-  /// System ID (ID of target system, normally flight controller).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_system
-  final uint8_t targetSystem;
-
-  /// Component ID (normally 0 for broadcast).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_component
-  final uint8_t targetComponent;
-
-  /// Total number of RC channels being received. This can be larger than 32, indicating that more channels are available but not given in this message.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// count
-  final uint8_t count;
-
-  /// RC channels.
-  /// Channel values are in centered 13 bit format. Range is -4096 to 4096, center is 0. Conversion to PWM is x * 5/32 + 1500.
-  /// Channels with indexes equal or above count should be set to 0, to benefit from MAVLink's trailing-zero trimming.
-  ///
-  /// MAVLink type: int16_t[32]
-  ///
-  /// Extensions field for MAVLink 2.
-  ///
-  /// channels
-  final List<int16_t> channels;
-
-  RadioRcChannels({
-    required this.timeLastUpdateMs,
-    required this.flags,
-    required this.targetSystem,
-    required this.targetComponent,
-    required this.count,
-    required this.channels,
-  });
-
-  RadioRcChannels copyWith({
-    uint32_t? timeLastUpdateMs,
-    RadioRcChannelsFlags? flags,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
-    uint8_t? count,
-    List<int16_t>? channels,
-  }) {
-    return RadioRcChannels(
-      timeLastUpdateMs: timeLastUpdateMs ?? this.timeLastUpdateMs,
-      flags: flags ?? this.flags,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
-      count: count ?? this.count,
-      channels: channels ?? this.channels,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timeLastUpdateMs': timeLastUpdateMs,
-        'flags': flags,
-        'targetSystem': targetSystem,
-        'targetComponent': targetComponent,
-        'count': count,
-        'channels': channels,
-      };
-
-  factory RadioRcChannels.parse(ByteData data_) {
-    if (data_.lengthInBytes < RadioRcChannels.mavlinkEncodedLength) {
-      var len = RadioRcChannels.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeLastUpdateMs = data_.getUint32(0, Endian.little);
-    var flags = data_.getUint16(4, Endian.little);
-    var targetSystem = data_.getUint8(6);
-    var targetComponent = data_.getUint8(7);
-    var count = data_.getUint8(8);
-    var channels = MavlinkMessage.asInt16List(data_, 9, 32);
-
-    return RadioRcChannels(
-        timeLastUpdateMs: timeLastUpdateMs,
-        flags: flags,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent,
-        count: count,
-        channels: channels);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, timeLastUpdateMs, Endian.little);
-    data_.setUint16(4, flags, Endian.little);
-    data_.setUint8(6, targetSystem);
-    data_.setUint8(7, targetComponent);
-    data_.setUint8(8, count);
-    MavlinkMessage.setInt16List(data_, 9, channels);
-    return data_;
-  }
-}
-
-/// Information about key components of GNSS receivers, like signal authentication, interference and system errors.
-///
-/// GNSS_INTEGRITY
-class GnssIntegrity implements MavlinkMessage {
-  static const int msgId = 441;
-
-  static const int crcExtra = 169;
-
-  static const int mavlinkEncodedLength = 17;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Errors in the GPS system.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// enum: [GpsSystemErrorFlags]
-  ///
-  /// system_errors
-  final GpsSystemErrorFlags systemErrors;
-
-  /// Horizontal expected accuracy using satellites successfully validated using RAIM.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: cm
-  ///
-  /// raim_hfom
-  final uint16_t raimHfom;
-
-  /// Vertical expected accuracy using satellites successfully validated using RAIM.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: cm
-  ///
-  /// raim_vfom
-  final uint16_t raimVfom;
-
-  /// GNSS receiver id. Must match instance ids of other messages from same receiver.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Signal authentication state of the GPS system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsAuthenticationState]
-  ///
-  /// authentication_state
-  final GpsAuthenticationState authenticationState;
-
-  /// Signal jamming state of the GPS system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsJammingState]
-  ///
-  /// jamming_state
-  final GpsJammingState jammingState;
-
-  /// Signal spoofing state of the GPS system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsSpoofingState]
-  ///
-  /// spoofing_state
-  final GpsSpoofingState spoofingState;
-
-  /// The state of the RAIM processing.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GpsRaimState]
-  ///
-  /// raim_state
-  final GpsRaimState raimState;
-
-  /// An abstract value representing the estimated quality of incoming corrections, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// corrections_quality
-  final uint8_t correctionsQuality;
-
-  /// An abstract value representing the overall status of the receiver, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// system_status_summary
-  final uint8_t systemStatusSummary;
-
-  /// An abstract value representing the quality of incoming GNSS signals, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// gnss_signal_quality
-  final uint8_t gnssSignalQuality;
-
-  /// An abstract value representing the estimated PPK quality, or 255 if not available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// post_processing_quality
-  final uint8_t postProcessingQuality;
-
-  GnssIntegrity({
-    required this.systemErrors,
-    required this.raimHfom,
-    required this.raimVfom,
-    required this.id,
-    required this.authenticationState,
-    required this.jammingState,
-    required this.spoofingState,
-    required this.raimState,
-    required this.correctionsQuality,
-    required this.systemStatusSummary,
-    required this.gnssSignalQuality,
-    required this.postProcessingQuality,
-  });
-
-  GnssIntegrity copyWith({
-    GpsSystemErrorFlags? systemErrors,
-    uint16_t? raimHfom,
-    uint16_t? raimVfom,
-    uint8_t? id,
-    GpsAuthenticationState? authenticationState,
-    GpsJammingState? jammingState,
-    GpsSpoofingState? spoofingState,
-    GpsRaimState? raimState,
-    uint8_t? correctionsQuality,
-    uint8_t? systemStatusSummary,
-    uint8_t? gnssSignalQuality,
-    uint8_t? postProcessingQuality,
-  }) {
-    return GnssIntegrity(
-      systemErrors: systemErrors ?? this.systemErrors,
-      raimHfom: raimHfom ?? this.raimHfom,
-      raimVfom: raimVfom ?? this.raimVfom,
-      id: id ?? this.id,
-      authenticationState: authenticationState ?? this.authenticationState,
-      jammingState: jammingState ?? this.jammingState,
-      spoofingState: spoofingState ?? this.spoofingState,
-      raimState: raimState ?? this.raimState,
-      correctionsQuality: correctionsQuality ?? this.correctionsQuality,
-      systemStatusSummary: systemStatusSummary ?? this.systemStatusSummary,
-      gnssSignalQuality: gnssSignalQuality ?? this.gnssSignalQuality,
-      postProcessingQuality:
-          postProcessingQuality ?? this.postProcessingQuality,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'systemErrors': systemErrors,
-        'raimHfom': raimHfom,
-        'raimVfom': raimVfom,
-        'id': id,
-        'authenticationState': authenticationState,
-        'jammingState': jammingState,
-        'spoofingState': spoofingState,
-        'raimState': raimState,
-        'correctionsQuality': correctionsQuality,
-        'systemStatusSummary': systemStatusSummary,
-        'gnssSignalQuality': gnssSignalQuality,
-        'postProcessingQuality': postProcessingQuality,
-      };
-
-  factory GnssIntegrity.parse(ByteData data_) {
-    if (data_.lengthInBytes < GnssIntegrity.mavlinkEncodedLength) {
-      var len = GnssIntegrity.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var systemErrors = data_.getUint32(0, Endian.little);
-    var raimHfom = data_.getUint16(4, Endian.little);
-    var raimVfom = data_.getUint16(6, Endian.little);
-    var id = data_.getUint8(8);
-    var authenticationState = data_.getUint8(9);
-    var jammingState = data_.getUint8(10);
-    var spoofingState = data_.getUint8(11);
-    var raimState = data_.getUint8(12);
-    var correctionsQuality = data_.getUint8(13);
-    var systemStatusSummary = data_.getUint8(14);
-    var gnssSignalQuality = data_.getUint8(15);
-    var postProcessingQuality = data_.getUint8(16);
-
-    return GnssIntegrity(
-        systemErrors: systemErrors,
-        raimHfom: raimHfom,
-        raimVfom: raimVfom,
-        id: id,
-        authenticationState: authenticationState,
-        jammingState: jammingState,
-        spoofingState: spoofingState,
-        raimState: raimState,
-        correctionsQuality: correctionsQuality,
-        systemStatusSummary: systemStatusSummary,
-        gnssSignalQuality: gnssSignalQuality,
-        postProcessingQuality: postProcessingQuality);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, systemErrors, Endian.little);
-    data_.setUint16(4, raimHfom, Endian.little);
-    data_.setUint16(6, raimVfom, Endian.little);
-    data_.setUint8(8, id);
-    data_.setUint8(9, authenticationState);
-    data_.setUint8(10, jammingState);
-    data_.setUint8(11, spoofingState);
-    data_.setUint8(12, raimState);
-    data_.setUint8(13, correctionsQuality);
-    data_.setUint8(14, systemStatusSummary);
-    data_.setUint8(15, gnssSignalQuality);
-    data_.setUint8(16, postProcessingQuality);
-    return data_;
-  }
-}
-
-/// Current motion information from sensors on a target
-///
-/// TARGET_ABSOLUTE
-class TargetAbsolute implements MavlinkMessage {
-  static const int msgId = 510;
-
-  static const int crcExtra = 245;
-
-  static const int mavlinkEncodedLength = 106;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX epoch time).
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// timestamp
-  final uint64_t timestamp;
-
-  /// Target's latitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lat
-  final int32_t lat;
-
-  /// Target's longitude (WGS84)
-  ///
-  /// MAVLink type: int32_t
-  ///
-  /// units: degE7
-  ///
-  /// lon
-  final int32_t lon;
-
-  /// Target's altitude (AMSL)
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// alt
-  final float alt;
-
-  /// Target's velocity in its body frame
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m/s
-  ///
-  /// vel
-  final List<float> vel;
-
-  /// Linear target's acceleration in its body frame
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m/s/s
-  ///
-  /// acc
-  final List<float> acc;
-
-  /// Quaternion of the target's orientation from its body frame to the vehicle's NED frame.
-  ///
-  /// MAVLink type: float[4]
-  ///
-  /// q_target
-  final List<float> qTarget;
-
-  /// Target's roll, pitch and yaw rates
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: rad/s
-  ///
-  /// rates
-  final List<float> rates;
-
-  /// Standard deviation of horizontal (eph) and vertical (epv) position errors
-  ///
-  /// MAVLink type: float[2]
-  ///
-  /// units: m
-  ///
-  /// position_std
-  final List<float> positionStd;
-
-  /// Standard deviation of the target's velocity in its body frame
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m/s
-  ///
-  /// vel_std
-  final List<float> velStd;
-
-  /// Standard deviation of the target's acceleration in its body frame
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m/s/s
-  ///
-  /// acc_std
-  final List<float> accStd;
-
-  /// The ID of the target if multiple targets are present
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Bitmap to indicate the sensor's reporting capabilities
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [TargetAbsoluteSensorCapabilityFlags]
-  ///
-  /// sensor_capabilities
-  final TargetAbsoluteSensorCapabilityFlags sensorCapabilities;
-
-  TargetAbsolute({
-    required this.timestamp,
-    required this.lat,
-    required this.lon,
-    required this.alt,
-    required this.vel,
-    required this.acc,
-    required this.qTarget,
-    required this.rates,
-    required this.positionStd,
-    required this.velStd,
-    required this.accStd,
-    required this.id,
-    required this.sensorCapabilities,
-  });
-
-  TargetAbsolute copyWith({
-    uint64_t? timestamp,
-    int32_t? lat,
-    int32_t? lon,
-    float? alt,
-    List<float>? vel,
-    List<float>? acc,
-    List<float>? qTarget,
-    List<float>? rates,
-    List<float>? positionStd,
-    List<float>? velStd,
-    List<float>? accStd,
-    uint8_t? id,
-    TargetAbsoluteSensorCapabilityFlags? sensorCapabilities,
-  }) {
-    return TargetAbsolute(
-      timestamp: timestamp ?? this.timestamp,
-      lat: lat ?? this.lat,
-      lon: lon ?? this.lon,
-      alt: alt ?? this.alt,
-      vel: vel ?? this.vel,
-      acc: acc ?? this.acc,
-      qTarget: qTarget ?? this.qTarget,
-      rates: rates ?? this.rates,
-      positionStd: positionStd ?? this.positionStd,
-      velStd: velStd ?? this.velStd,
-      accStd: accStd ?? this.accStd,
-      id: id ?? this.id,
-      sensorCapabilities: sensorCapabilities ?? this.sensorCapabilities,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timestamp': timestamp,
-        'lat': lat,
-        'lon': lon,
-        'alt': alt,
-        'vel': vel,
-        'acc': acc,
-        'qTarget': qTarget,
-        'rates': rates,
-        'positionStd': positionStd,
-        'velStd': velStd,
-        'accStd': accStd,
-        'id': id,
-        'sensorCapabilities': sensorCapabilities,
-      };
-
-  factory TargetAbsolute.parse(ByteData data_) {
-    if (data_.lengthInBytes < TargetAbsolute.mavlinkEncodedLength) {
-      var len = TargetAbsolute.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timestamp = data_.getUint64(0, Endian.little);
-    var lat = data_.getInt32(8, Endian.little);
-    var lon = data_.getInt32(12, Endian.little);
-    var alt = data_.getFloat32(16, Endian.little);
-    var vel = MavlinkMessage.asFloat32List(data_, 20, 3);
-    var acc = MavlinkMessage.asFloat32List(data_, 32, 3);
-    var qTarget = MavlinkMessage.asFloat32List(data_, 44, 4);
-    var rates = MavlinkMessage.asFloat32List(data_, 60, 3);
-    var positionStd = MavlinkMessage.asFloat32List(data_, 72, 2);
-    var velStd = MavlinkMessage.asFloat32List(data_, 80, 3);
-    var accStd = MavlinkMessage.asFloat32List(data_, 92, 3);
-    var id = data_.getUint8(104);
-    var sensorCapabilities = data_.getUint8(105);
-
-    return TargetAbsolute(
-        timestamp: timestamp,
-        lat: lat,
-        lon: lon,
-        alt: alt,
-        vel: vel,
-        acc: acc,
-        qTarget: qTarget,
-        rates: rates,
-        positionStd: positionStd,
-        velStd: velStd,
-        accStd: accStd,
-        id: id,
-        sensorCapabilities: sensorCapabilities);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timestamp, Endian.little);
-    data_.setInt32(8, lat, Endian.little);
-    data_.setInt32(12, lon, Endian.little);
-    data_.setFloat32(16, alt, Endian.little);
-    MavlinkMessage.setFloat32List(data_, 20, vel);
-    MavlinkMessage.setFloat32List(data_, 32, acc);
-    MavlinkMessage.setFloat32List(data_, 44, qTarget);
-    MavlinkMessage.setFloat32List(data_, 60, rates);
-    MavlinkMessage.setFloat32List(data_, 72, positionStd);
-    MavlinkMessage.setFloat32List(data_, 80, velStd);
-    MavlinkMessage.setFloat32List(data_, 92, accStd);
-    data_.setUint8(104, id);
-    data_.setUint8(105, sensorCapabilities);
-    return data_;
-  }
-}
-
-/// The location of a target measured by MAV's onboard sensors.
-///
-/// TARGET_RELATIVE
-class TargetRelative implements MavlinkMessage {
-  static const int msgId = 511;
-
-  static const int crcExtra = 28;
-
-  static const int mavlinkEncodedLength = 71;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Timestamp (UNIX epoch time)
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// units: us
-  ///
-  /// timestamp
-  final uint64_t timestamp;
-
-  /// X Position of the target in TARGET_OBS_FRAME
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// x
-  final float x;
-
-  /// Y Position of the target in TARGET_OBS_FRAME
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// y
-  final float y;
-
-  /// Z Position of the target in TARGET_OBS_FRAME
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: m
-  ///
-  /// z
-  final float z;
-
-  /// Standard deviation of the target's position in TARGET_OBS_FRAME
-  ///
-  /// MAVLink type: float[3]
-  ///
-  /// units: m
-  ///
-  /// pos_std
-  final List<float> posStd;
-
-  /// Standard deviation of the target's orientation in TARGET_OBS_FRAME
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: rad
-  ///
-  /// yaw_std
-  final float yawStd;
-
-  /// Quaternion of the target's orientation from the target's frame to the TARGET_OBS_FRAME (w, x, y, z order, zero-rotation is 1, 0, 0, 0)
-  ///
-  /// MAVLink type: float[4]
-  ///
-  /// q_target
-  final List<float> qTarget;
-
-  /// Quaternion of the sensor's orientation from TARGET_OBS_FRAME to vehicle-carried NED. (Ignored if set to (0,0,0,0)) (w, x, y, z order, zero-rotation is 1, 0, 0, 0)
-  ///
-  /// MAVLink type: float[4]
-  ///
-  /// q_sensor
-  final List<float> qSensor;
-
-  /// The ID of the target if multiple targets are present
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// id
-  final uint8_t id;
-
-  /// Coordinate frame used for following fields.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [TargetObsFrame]
-  ///
-  /// frame
-  final TargetObsFrame frame;
-
-  /// Type of target
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [LandingTargetType]
-  ///
-  /// type
-  final LandingTargetType type;
-
-  TargetRelative({
-    required this.timestamp,
-    required this.x,
-    required this.y,
-    required this.z,
-    required this.posStd,
-    required this.yawStd,
-    required this.qTarget,
-    required this.qSensor,
-    required this.id,
-    required this.frame,
-    required this.type,
-  });
-
-  TargetRelative copyWith({
-    uint64_t? timestamp,
-    float? x,
-    float? y,
-    float? z,
-    List<float>? posStd,
-    float? yawStd,
-    List<float>? qTarget,
-    List<float>? qSensor,
-    uint8_t? id,
-    TargetObsFrame? frame,
-    LandingTargetType? type,
-  }) {
-    return TargetRelative(
-      timestamp: timestamp ?? this.timestamp,
-      x: x ?? this.x,
-      y: y ?? this.y,
-      z: z ?? this.z,
-      posStd: posStd ?? this.posStd,
-      yawStd: yawStd ?? this.yawStd,
-      qTarget: qTarget ?? this.qTarget,
-      qSensor: qSensor ?? this.qSensor,
-      id: id ?? this.id,
-      frame: frame ?? this.frame,
-      type: type ?? this.type,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'timestamp': timestamp,
-        'x': x,
-        'y': y,
-        'z': z,
-        'posStd': posStd,
-        'yawStd': yawStd,
-        'qTarget': qTarget,
-        'qSensor': qSensor,
-        'id': id,
-        'frame': frame,
-        'type': type,
-      };
-
-  factory TargetRelative.parse(ByteData data_) {
-    if (data_.lengthInBytes < TargetRelative.mavlinkEncodedLength) {
-      var len = TargetRelative.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timestamp = data_.getUint64(0, Endian.little);
-    var x = data_.getFloat32(8, Endian.little);
-    var y = data_.getFloat32(12, Endian.little);
-    var z = data_.getFloat32(16, Endian.little);
-    var posStd = MavlinkMessage.asFloat32List(data_, 20, 3);
-    var yawStd = data_.getFloat32(32, Endian.little);
-    var qTarget = MavlinkMessage.asFloat32List(data_, 36, 4);
-    var qSensor = MavlinkMessage.asFloat32List(data_, 52, 4);
-    var id = data_.getUint8(68);
-    var frame = data_.getUint8(69);
-    var type = data_.getUint8(70);
-
-    return TargetRelative(
-        timestamp: timestamp,
-        x: x,
-        y: y,
-        z: z,
-        posStd: posStd,
-        yawStd: yawStd,
-        qTarget: qTarget,
-        qSensor: qSensor,
-        id: id,
-        frame: frame,
-        type: type);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timestamp, Endian.little);
-    data_.setFloat32(8, x, Endian.little);
-    data_.setFloat32(12, y, Endian.little);
-    data_.setFloat32(16, z, Endian.little);
-    MavlinkMessage.setFloat32List(data_, 20, posStd);
-    data_.setFloat32(32, yawStd, Endian.little);
-    MavlinkMessage.setFloat32List(data_, 36, qTarget);
-    MavlinkMessage.setFloat32List(data_, 52, qSensor);
-    data_.setUint8(68, id);
-    data_.setUint8(69, frame);
-    data_.setUint8(70, type);
-    return data_;
-  }
-}
-
-/// Information about GCS in control of this MAV. This should be broadcast at low rate (nominally 1 Hz) and emitted when ownership or takeover status change. Control over MAV is requested using MAV_CMD_REQUEST_OPERATOR_CONTROL.
-///
-/// CONTROL_STATUS
-class ControlStatus implements MavlinkMessage {
-  static const int msgId = 512;
-
-  static const int crcExtra = 184;
-
-  static const int mavlinkEncodedLength = 2;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// System ID of GCS MAVLink component in control (0: no GCS in control).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// sysid_in_control
-  final uint8_t sysidInControl;
-
-  /// Control status. For example, whether takeover is allowed, and whether this message instance defines the default controlling GCS for the whole system.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [GcsControlStatusFlags]
-  ///
-  /// flags
-  final GcsControlStatusFlags flags;
-
-  ControlStatus({
-    required this.sysidInControl,
-    required this.flags,
-  });
-
-  ControlStatus copyWith({
-    uint8_t? sysidInControl,
-    GcsControlStatusFlags? flags,
-  }) {
-    return ControlStatus(
-      sysidInControl: sysidInControl ?? this.sysidInControl,
-      flags: flags ?? this.flags,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-        'msgId': msgId,
-        'sysidInControl': sysidInControl,
-        'flags': flags,
-      };
-
-  factory ControlStatus.parse(ByteData data_) {
-    if (data_.lengthInBytes < ControlStatus.mavlinkEncodedLength) {
-      var len = ControlStatus.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var sysidInControl = data_.getUint8(0);
-    var flags = data_.getUint8(1);
-
-    return ControlStatus(sysidInControl: sysidInControl, flags: flags);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint8(0, sysidInControl);
-    data_.setUint8(1, flags);
-    return data_;
-  }
-}
-
-/// ESC EEPROM data message for reading and writing ESC configuration.
-/// Supports multiple ESC firmware types including AM32, Bluejay, and BLHeli32.
-/// ESC data is read by sending the MAV_CMD_REQUEST_MESSAGE with `param1=292` and `param2=esc_index`, where esc_index is the zero-indexed ESC number for the corresponding motor, and 255 is used to request data for all ESC.
-/// The message can be sent to set the ESC value.
-/// For write requests, a bitmask allows selective writing of specific bytes to avoid corrupting unchanged values.
-///
-/// The data format is opaque to the autopilot.
-/// A GCS is required to understand the format in order to create an appropriate UI for display and setting configuration values, and to inform users when the ESC uses an unsupported data format.
-/// Note that for AM32 EEPROMs the data layout is defined in: https://github.com/am32-firmware/AM32/blob/main/Inc/eeprom.h (the second byte in the structure is the eeprom_version).
-/// The firmware field indicates which ESC firmware is in use, allowing the GCS to interpret the data correctly.
-///
-///
-/// ESC_EEPROM
-class EscEeprom implements MavlinkMessage {
-  static const int msgId = 292;
-
-  static const int crcExtra = 227;
-
-  static const int mavlinkEncodedLength = 223;
-
-  @override
-  int get mavlinkMessageId => msgId;
-
-  @override
-  int get mavlinkCrcExtra => crcExtra;
-
-  /// Bitmask indicating which bytes in the data array should be written. Each bit corresponds to a byte index in the data array (bit 0 of write_mask[0] = data[0], bit 31 of write_mask[0] = data[31], bit 0 of write_mask[1] = data[32], etc.). Set bits indicate bytes to write, cleared bits indicate bytes to skip. This allows precise updates of individual parameters without overwriting the entire EEPROM.
-  ///
-  /// MAVLink type: uint32_t[6]
-  ///
-  /// write_mask
-  final List<int32_t> writeMask;
-
-  /// System ID (ID of target system, normally flight controller).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_system
-  final uint8_t targetSystem;
-
-  /// Component ID (normally 0 for broadcast).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_component
-  final uint8_t targetComponent;
-
-  /// ESC firmware type.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// enum: [EscFirmware]
-  ///
-  /// firmware
-  final EscFirmware firmware;
-
-  /// Zero-indexed sequence number of this message when multiple messages are required to transfer the complete EEPROM data. The first message has index 0. For single-message transfers, set to 0.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// msg_index
-  final uint8_t msgIndex;
-
-  /// Total number of messages required to transfer the complete EEPROM data. For single-message transfers, set to 1. Receivers should collect all messages from index 0 to msg_count-1 before reconstructing the complete data.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// msg_count
-  final uint8_t msgCount;
-
-  /// Index of the ESC (0 = ESC1, 1 = ESC2, etc.).
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// esc_index
-  final uint8_t escIndex;
-
-  /// Number of valid bytes in data array.
+  /// The number of LEDs to set (up to 8).
   ///
   /// MAVLink type: uint8_t
   ///
   /// length
   final uint8_t length;
 
-  /// Raw ESC EEPROM data. Unused bytes should be set to zero.
+  /// Which strip to configure. UINT8_MAX for all strips.
   ///
-  /// MAVLink type: uint8_t[192]
+  /// MAVLink type: uint8_t
   ///
-  /// data
-  final List<int8_t> data;
+  /// id
+  final uint8_t id;
 
-  EscEeprom({
-    required this.writeMask,
+  LedStripConfig({
+    required this.colors,
     required this.targetSystem,
     required this.targetComponent,
-    required this.firmware,
-    required this.msgIndex,
-    required this.msgCount,
-    required this.escIndex,
+    required this.mode,
+    required this.index,
     required this.length,
-    required this.data,
+    required this.id,
   });
 
-  EscEeprom copyWith({
-    List<int32_t>? writeMask,
+  LedStripConfig copyWith({
+    List<int32_t>? colors,
     uint8_t? targetSystem,
     uint8_t? targetComponent,
-    EscFirmware? firmware,
-    uint8_t? msgIndex,
-    uint8_t? msgCount,
-    uint8_t? escIndex,
+    LedConfigMode? mode,
+    uint8_t? index,
     uint8_t? length,
-    List<int8_t>? data,
+    uint8_t? id,
   }) {
-    return EscEeprom(
-      writeMask: writeMask ?? this.writeMask,
+    return LedStripConfig(
+      colors: colors ?? this.colors,
       targetSystem: targetSystem ?? this.targetSystem,
       targetComponent: targetComponent ?? this.targetComponent,
-      firmware: firmware ?? this.firmware,
-      msgIndex: msgIndex ?? this.msgIndex,
-      msgCount: msgCount ?? this.msgCount,
-      escIndex: escIndex ?? this.escIndex,
+      mode: mode ?? this.mode,
+      index: index ?? this.index,
       length: length ?? this.length,
-      data: data ?? this.data,
+      id: id ?? this.id,
     );
   }
 
   @override
   Map<String, dynamic> toJson() => {
         'msgId': msgId,
-        'writeMask': writeMask,
+        'colors': colors,
         'targetSystem': targetSystem,
         'targetComponent': targetComponent,
-        'firmware': firmware,
-        'msgIndex': msgIndex,
-        'msgCount': msgCount,
-        'escIndex': escIndex,
+        'mode': mode,
+        'index': index,
         'length': length,
-        'data': data,
+        'id': id,
       };
 
-  factory EscEeprom.parse(ByteData data_) {
-    if (data_.lengthInBytes < EscEeprom.mavlinkEncodedLength) {
-      var len = EscEeprom.mavlinkEncodedLength - data_.lengthInBytes;
+  factory LedStripConfig.parse(ByteData data_) {
+    if (data_.lengthInBytes < LedStripConfig.mavlinkEncodedLength) {
+      var len = LedStripConfig.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var writeMask = MavlinkMessage.asUint32List(data_, 0, 6);
-    var targetSystem = data_.getUint8(24);
-    var targetComponent = data_.getUint8(25);
-    var firmware = data_.getUint8(26);
-    var msgIndex = data_.getUint8(27);
-    var msgCount = data_.getUint8(28);
-    var escIndex = data_.getUint8(29);
-    var length = data_.getUint8(30);
-    var data = MavlinkMessage.asUint8List(data_, 31, 192);
+    var colors = MavlinkMessage.asUint32List(data_, 0, 8);
+    var targetSystem = data_.getUint8(32);
+    var targetComponent = data_.getUint8(33);
+    var mode = data_.getUint8(34);
+    var index = data_.getUint8(35);
+    var length = data_.getUint8(36);
+    var id = data_.getUint8(37);
 
-    return EscEeprom(
-        writeMask: writeMask,
+    return LedStripConfig(
+        colors: colors,
         targetSystem: targetSystem,
         targetComponent: targetComponent,
-        firmware: firmware,
-        msgIndex: msgIndex,
-        msgCount: msgCount,
-        escIndex: escIndex,
+        mode: mode,
+        index: index,
         length: length,
-        data: data);
+        id: id);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    MavlinkMessage.setUint32List(data_, 0, writeMask);
-    data_.setUint8(24, targetSystem);
-    data_.setUint8(25, targetComponent);
-    data_.setUint8(26, firmware);
-    data_.setUint8(27, msgIndex);
-    data_.setUint8(28, msgCount);
-    data_.setUint8(29, escIndex);
-    data_.setUint8(30, length);
-    MavlinkMessage.setUint8List(data_, 31, data);
+    MavlinkMessage.setUint32List(data_, 0, colors);
+    data_.setUint8(32, targetSystem);
+    data_.setUint8(33, targetComponent);
+    data_.setUint8(34, mode);
+    data_.setUint8(35, index);
+    data_.setUint8(36, length);
+    data_.setUint8(37, id);
     return data_;
   }
 }
 
-class MavlinkDialectDevelopment implements MavlinkDialect {
-  static const int mavlinkVersion = 0;
+/// Current LED State. Can be emitted by LED Strip Controller.
+///
+/// LED_STRIP_STATE
+class LedStripState implements MavlinkMessage {
+  static const int msgId = 52601;
+
+  static const int crcExtra = 102;
+
+  static const int mavlinkEncodedLength = 36;
+
+  @override
+  int get mavlinkMessageId => msgId;
+
+  @override
+  int get mavlinkCrcExtra => crcExtra;
+
+  /// Array of 32-bit color values (0xWWRRGGBB).
+  ///
+  /// MAVLink type: uint32_t[8]
+  ///
+  /// colors
+  final List<int32_t> colors;
+
+  /// How many LEDs are being reported in this message.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// length
+  final uint8_t length;
+
+  /// Index of first LED being reported.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// index
+  final uint8_t index;
+
+  /// Which strip is being reported.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// id
+  final uint8_t id;
+
+  /// Are the LED colors changing according to the flight mode (1) or not (0).
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// following_flight_mode
+  final uint8_t followingFlightMode;
+
+  LedStripState({
+    required this.colors,
+    required this.length,
+    required this.index,
+    required this.id,
+    required this.followingFlightMode,
+  });
+
+  LedStripState copyWith({
+    List<int32_t>? colors,
+    uint8_t? length,
+    uint8_t? index,
+    uint8_t? id,
+    uint8_t? followingFlightMode,
+  }) {
+    return LedStripState(
+      colors: colors ?? this.colors,
+      length: length ?? this.length,
+      index: index ?? this.index,
+      id: id ?? this.id,
+      followingFlightMode: followingFlightMode ?? this.followingFlightMode,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'msgId': msgId,
+        'colors': colors,
+        'length': length,
+        'index': index,
+        'id': id,
+        'followingFlightMode': followingFlightMode,
+      };
+
+  factory LedStripState.parse(ByteData data_) {
+    if (data_.lengthInBytes < LedStripState.mavlinkEncodedLength) {
+      var len = LedStripState.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var colors = MavlinkMessage.asUint32List(data_, 0, 8);
+    var length = data_.getUint8(32);
+    var index = data_.getUint8(33);
+    var id = data_.getUint8(34);
+    var followingFlightMode = data_.getUint8(35);
+
+    return LedStripState(
+        colors: colors,
+        length: length,
+        index: index,
+        id: id,
+        followingFlightMode: followingFlightMode);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    MavlinkMessage.setUint32List(data_, 0, colors);
+    data_.setUint8(32, length);
+    data_.setUint8(33, index);
+    data_.setUint8(34, id);
+    data_.setUint8(35, followingFlightMode);
+    return data_;
+  }
+}
+
+class MavlinkDialectStemstudios implements MavlinkDialect {
+  static const int mavlinkVersion = 3;
 
   @override
   int get version => mavlinkVersion;
@@ -52148,30 +50056,10 @@ class MavlinkDialectDevelopment implements MavlinkDialect {
         return OpenDroneIdSystemUpdate.parse(data);
       case 12920:
         return HygrometerSensor.parse(data);
-      case 296:
-        return GlobalPosition.parse(data);
-      case 354:
-        return SetVelocityLimits.parse(data);
-      case 355:
-        return VelocityLimits.parse(data);
-      case 369:
-        return BatteryStatusV2.parse(data);
-      case 414:
-        return GroupStart.parse(data);
-      case 415:
-        return GroupEnd.parse(data);
-      case 420:
-        return RadioRcChannels.parse(data);
-      case 441:
-        return GnssIntegrity.parse(data);
-      case 510:
-        return TargetAbsolute.parse(data);
-      case 511:
-        return TargetRelative.parse(data);
-      case 512:
-        return ControlStatus.parse(data);
-      case 292:
-        return EscEeprom.parse(data);
+      case 52600:
+        return LedStripConfig.parse(data);
+      case 52601:
+        return LedStripState.parse(data);
       default:
         return null;
     }
@@ -52644,30 +50532,10 @@ class MavlinkDialectDevelopment implements MavlinkDialect {
         return OpenDroneIdSystemUpdate.crcExtra;
       case 12920:
         return HygrometerSensor.crcExtra;
-      case 296:
-        return GlobalPosition.crcExtra;
-      case 354:
-        return SetVelocityLimits.crcExtra;
-      case 355:
-        return VelocityLimits.crcExtra;
-      case 369:
-        return BatteryStatusV2.crcExtra;
-      case 414:
-        return GroupStart.crcExtra;
-      case 415:
-        return GroupEnd.crcExtra;
-      case 420:
-        return RadioRcChannels.crcExtra;
-      case 441:
-        return GnssIntegrity.crcExtra;
-      case 510:
-        return TargetAbsolute.crcExtra;
-      case 511:
-        return TargetRelative.crcExtra;
-      case 512:
-        return ControlStatus.crcExtra;
-      case 292:
-        return EscEeprom.crcExtra;
+      case 52600:
+        return LedStripConfig.crcExtra;
+      case 52601:
+        return LedStripState.crcExtra;
       default:
         return -1;
     }
